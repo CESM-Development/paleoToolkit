@@ -1,0 +1,36 @@
+Definesurf for Deep Time -
+
+author:  nanr
+date:  jan 2015
+
+Definesurf is a CESM tool used to create smoothed atmospheric forcing files for cam (bnd_topo).  This process was modified for 
+Deep Time Paleo by adding several steps.  First, the user creates a 10min topographic datafile (requred by definesurf) by using 
+an NCL script to remap their base paleo topography to 10min.  We also use a generic 'landm_coslat' file,
+also required by definesurf, but not used by CAM5.  For paleo we use 'ftopo' for landfrac and 'htopo' for topography; this allows
+definesurf to be run as an 'old style' input where definesurf is not expecting a topography 'variance' (which which we don't 
+have for deep time).  We also provide the grid map required by definesurf:  fv_1.9x2.5.nc (or fv_0.9x1.25.nc).  
+With these inputfiles, definesurf creates SGH, but not SGH30, which is required in cam5.  We approximate SGH30 from
+the modern global average ratio of SGH30/SGH: SGH30 = SGH*0.16. 
+
+Example case : Permian
+
+Step 1) Create 10min paleo topography as input for definesurf:  
+	src:  mk_10min_definesurf_input_paleo.ncl
+	inf1:  USGS-gtopo30_10min_c050419.nc
+	inf2:  permian_topo.05deg.nc 
+        inf3:  permian_topo.05deg.nc
+	out1:  permian_topo.10min.{DATE}.nc 
+
+Step 2)  run definesurf with Ross Ice Shelf turned OFF (-r option)
+
+       ./definesurf -remap -r -t permian_topo.10min.{DATE}.nc -g fv_1.9x2.5.nc -l landm_coslat.nc bnd_topo_permian_1.9x2.5_remap.{DATE}.nc
+
+
+Step 3)  Add SGH30 with 0.16 ratio (estimated from global PD SGH30/SGH ratio).  Note:  excluding LANDM_COSLAT in the bnd_topo file b/c the landmask it uses is modern.  
+        CAM5 doesn't use landm_coslat;  switch write_landm_coslat flag to TRUE for CAM4.
+
+	src: add_SGH30_paleo.ncl
+	in1: bnd_topo_permian_1.9x2.5_remap.150331.nc
+        of1: bnd_topo_permian_1.9x2.5_remap_sgh30.150331.nc
+
+

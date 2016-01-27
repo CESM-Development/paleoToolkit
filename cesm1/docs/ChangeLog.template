@@ -1,0 +1,29 @@
+===============================================================
+Tag name: paleoToolKit
+Originator(s): Nanr
+Date: 13Jan2016
+One-line Summary: region_mask 
+
+Purpose of changes:  Add region_mask tools for deep time ocean.
+
+Describe any changes made to paleoToolKit: Update version
+
+Code reviewed by: myself
+
+List all subroutines eliminated:
+
+List all subroutines added and what they do:
+A  lnd_template4.2.36.csh  Update version
+
+List all existing files that have been modified, and describe the changes:
+A         docs/ChangeLog
+A         ocn/region_mask
+A         ocn/region_mask/mk_ocninput.csh
+A         ocn/region_mask/model_size.F
+A         ocn/region_mask/ice_size.F
+A         ocn/region_mask/region_ids
+A         ocn/region_mask/transport_contents
+A         ocn/region_mask/ice_model_size.F
+
+Summary of changes: Add region_mask
+===============================================================

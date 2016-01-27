@@ -1,0 +1,12 @@
+
+The software CCSM3 applies to create the mapping files is a 
+software package called SCRIP and was developed at LANL.  
+For more information on SCRIP, 
+see http://climate.acl.lanl.gov/software/SCRIP .
+
+CCSM3 uses version scrip1.4 and is found in the setup_tools
+directories,  cpl/scrip1.4.
+
+See the documentation and cpl/scripts/mk_remap.csh script for details.
+
+

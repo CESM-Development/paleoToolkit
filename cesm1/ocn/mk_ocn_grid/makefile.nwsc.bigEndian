@@ -1,0 +1,31 @@
+FC = ifort -assume byterecl -convert big_endian
+INCS  = -I/glade/apps/opt/netcdf/4.2/intel/default/include
+LIBS = -L/glade/apps/opt/netcdf/4.2/intel/default/lib -lnetcdf
+TARGETS = ns_dipole paleotopo grid_bin2nc 
+# TARGETS = ns_dipole paleotopo grid_bin2nc gridkmt_nc2bin grid_bin2nc_real
+
+all: $(TARGETS)
+
+ns_dipole : ns_dipole.f
+	$(FC) -o ns_dipole ns_dipole.f $(INCS) $(LIBS)
+
+paleotopo : paleotopo.f90
+	$(FC) -o paleotopo paleotopo.f90 $(INCS) $(LIBS)
+
+# pop grid MUST be BIG_ENDIAN
+grid_bin2nc : grid_bin2nc.f90
+	$(FC) -o grid_bin2nc grid_bin2nc.f90 $(INCS) $(LIBS)
+
+#grid_bin2nc_real : grid_bin2nc_real.f90
+	#$(FC) -o grid_bin2nc_real grid_bin2nc_real.f90 $(INCS) $(LIBS)
+
+#gridkmt_nc2bin : gridkmt_nc2bin.f90
+	#$(FC) -o gridkmt_nc2bin gridkmt_nc2bin.f90 $(INCS) $(LIBS)
+
+# mv ns_dipole ..
+# mv grid_bin2nc ..
+# mv paleotopo ..
+
+
+clean: 
+	-rm $(TARGETS)

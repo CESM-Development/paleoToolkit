@@ -4,6 +4,9 @@
 *.o
 *.obj
 
+#subversion
+.svn
+
 # Precompiled Headers
 *.gch
 *.pch
