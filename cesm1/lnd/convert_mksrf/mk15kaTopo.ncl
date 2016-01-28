@@ -149,8 +149,8 @@ begin
  fout1 = addfile(ofile1,"c")
  fileAtt             = True
  fileAtt@create_date = systemfunc("date")
- fileAtt@author      = "nanr@ucar.edu"
- fileAtt@srcCode     = "mk15kaTopo.ncl"
+;fileAtt@author      = 
+ fileAtt@srcCode     = get_script_name()
  fileAtt@infile1     = ifile1
  fileAtt@infile2     = ifile2
  fileAtt@infile3     = ifile3
@@ -166,7 +166,6 @@ begin
 ; create plot
 ;*************************************************
   ofile2 = "topo_15ka_10min."+dd
-  ; ofile2 = "topo_10min.lmask."+tol+"."+dd
   wks  = gsn_open_wks("ps",ofile2)     ; open a ps file
   gsn_define_colormap(wks,"BlAqGrYeOrRe")     ; choose colormap
 

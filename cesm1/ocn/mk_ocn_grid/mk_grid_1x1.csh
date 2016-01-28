@@ -14,14 +14,13 @@ set verbose
 ###################################################################
 #Define global variables:
 
-set MYDIR = /glade/p/cesm/palwg/paleo_setup/
-# set MYDIR = /glade/p/cgd/ccr/people/nanr/permian/
+set MYDIR = USERPATH/paleo_setup/
 set CASE  = permian
-set ITER   = 4   			# iteration 
-set TOPO  = bathtopo-fin.grd.1deg.130730.nc
+set ITER  = 4   			# iteration 
+set TOPO  = topo.1deg.nc
 set DATE  = "`date +%y%m%d`"
 
-setenv DATADIR  /glade/u/home/nanr/setup_tools_cesm1/ocn/griddata
+setenv DATADIR  USERPATH/paleo_setup/ocn/griddata
 setenv SRCDIR   $MYDIR/ocn/mk_ocn_grid/
 setenv WKDIR    $MYDIR/ocn/mk_ocn_grid/$CASE
 setenv MYDATA   $MYDIR/topobath/   # cp topo data here
@@ -50,8 +49,8 @@ set latsp   =  -69.   		# latitude  of South Pole (kmt.3.da)
 # change iteratively after you look at your grid.
 # Use these to adjust gridcell distribution so you don't have big
 # cells in the N. Hem and small cells in the S. Hem, for example.
-set nlatn   = 214   		# number of j grid lines in NH	(Dan Lunt cret)
-set nlats   = 170   		# number of j grid lines in SH	(Dan Lunt cret)
+set nlatn   = 214   		# number of j grid lines in NH	
+set nlats   = 170   		# number of j grid lines in SH
 # set nlatn   = 63   		# number of j grid lines in NH
 # set nlats   = 53   		# number of j grid lines in SH
 

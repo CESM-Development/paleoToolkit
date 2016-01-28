@@ -5,11 +5,11 @@ set verbose
 
 set DATE    = "`date +%y%m%d`"
 
-set CASE    = permian
+set CASE    = USER_DEFINED
 
-set popgriddir = /glade/p/cesm/palwg/paleo_setup/ocn/mk_ocn_grid/$CASE
+set popgriddir = USERPATH/paleo_setup/ocn/mk_ocn_grid/$CASE
 
-set scripdir   = /glade/u/home/nanr/setup_tools_cesm1/cpl_mapping/scrip1.4/
+set scripdir   = USERPATH/paleo_setup/cpl_mapping/scrip1.4/
 
 
 set nx      = 320  			# number of i ocn gridpoints (longitudes)
@@ -17,8 +17,8 @@ set ny      = 384   	 		# number of j ocn gridpoints (latitudes)
 # -----------------------------------------------------------------
 # Input files -----------------------------------------------------
 # -----------------------------------------------------------------
-set popgrid     = grid.98.pop.da			# binary grid file from mk_grid.csh
-set kmtgrid     = kmt.98.da			# binary kmt  file from mk_grid.csh
+set popgrid     = grid.pop.da			# binary grid file from mk_grid.csh
+set kmtgrid     = kmt.da			# binary kmt  file from mk_grid.csh
 
 set popgridfile = $popgriddir/$popgrid		
 set kmtgridfile = $popgriddir/$kmtgrid
