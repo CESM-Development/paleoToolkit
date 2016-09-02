@@ -1,2 +1,2 @@
 # paleoToolkit
-paleo tools for cesm
+Resources for CESM paleoclimate modelers.
