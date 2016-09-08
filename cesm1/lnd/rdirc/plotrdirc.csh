@@ -10,7 +10,7 @@ set verbose
 # Begin User Modify : specify input/output pathnames 
 #----------------------------------------------------------------------------
 
-set IFILE  = bathtopo-fin.grd.05deg.nc
+set IFILE  = myTopo.05deg.nc
 setenv NLAT      360
 setenv NLON      720
 set RESOLN   =   0.5x0.5
