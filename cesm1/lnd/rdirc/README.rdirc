@@ -1,0 +1,63 @@
+; ======================================================================
+; ======================================================================
+; ======================================================================
+; rdirc (runoff)
+; ======================================================================
+; ======================================================================
+; ======================================================================
+; ======================================================================
+
+Step 1:--------------   plot runoff on 1x1 degree grid
+N1:  Input map must be on 05.x0.5 degree grid.
+N2.  modify rdirc for your case (INFILE, CASE)
+
+(Note that the code may report errors and pause, waiting for input, before it completes.  Press the return key to continue to the end of the program).
+
+modify shell:   rdirc.csh
+src1:    topo2rdirc.F90
+src2:    topo2rdirc_sed.F90
+in1:     myTopo.05deg.nc
+out1:    fort.10_$CASE
+out2:    fort.11_$CASE          !! error file
+out3:    fort.13_$CASE          !! redirected runoff directions
+out4:    fort.14_$CASE          !! error file
+
+% usage:  ./rdirc.csh
+
+
+Step 2:--------------  plot runoff
+
+N1.  Modify plotrdirc.
+shell:  plotrdirc.csh
+        set IFILE  = myTopo.05deg.nc
+        setenv NLAT      360
+        setenv NLON      720
+        set RESOLN   =   0.5x0.5
+src1:   plot_rdirc.ncl
+in1:    myTopo.05deg.nc
+in2:    fort.10_$CASE
+in3:    fort.11_$CASE
+in4:    fort.13_$CASE
+out:    rdirc_topo.1x1deg.nc.ps
+
+% usage:  ./plotrdirc.csh
+
+Step 3:--------------  convert to netCDF
+src:  rtm_ncdf.pro
+Edit rtm_ncdf.pro to point to your final runoff file (fort.13_$CASE).
+        cp fort.13_myCase rdirc.0.5x0.5.myCase
+        rtmfile1='rdirc.0.5x0.5.myCase'            !! input file
+        outfile='rdirc.0.5x0.5.myCase.nc'          !! output file
+        resnum=1                ; half-degree   !! resolution
+
+% usage
+Start IDL on the command line:
+
+% IDL
+IDL> .rn rtm_ncdf       ; compile rtm module
+IDL> rtm                ; execute code
+
+
+; ======================================================================
+; END
+; ======================================================================
