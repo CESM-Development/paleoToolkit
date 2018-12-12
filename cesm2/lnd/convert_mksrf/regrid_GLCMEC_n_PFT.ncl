@@ -1,6 +1,14 @@
 ;
 ; Regrid Glacier and PFT datasets to half degree
 ;
+procedure duplicate_file4newgrid ( outfilename:string, ncin:file, ncout:file, outlat, outlon, outmsk, outlatixy, outlongxy )
+;
+; Duplicate the input file on the output file with a new grid
+;
+begin
+   print( "Work on "+outfilename );
+end
+
 begin
    ;
    ; Set Input files and open them
@@ -42,4 +50,9 @@ begin
    outlatixy = ncgrd->LATIXY;
    outlongxy = ncgrd->LONGXY;
 
+   duplicate_file4newgrid ( outglacierfile, ncglc, nco_glc, outlat, outlon, outmsk, outlatixy, outlongxy )
+   duplicate_file4newgrid ( outpftfile,     ncpft, nco_pft, outlat, outlon, outmsk, outlatixy, outlongxy )
+
+   print( "" );
+   print( "Successfully regrid files" );
 end
