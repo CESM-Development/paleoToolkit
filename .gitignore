@@ -26,6 +26,8 @@
 *.lib
 
 # Executables
+convert_mksrf
+paleo_mkraw_cesm?
 *.exe
 *.out
 *.app
