@@ -16,16 +16,12 @@ begin
   sourceCode = "nn_fill.ncl"
 
   case   = "21ka"
-  idate  = "140501"
-  path   = "/glade/p/cesm/palwg/paleo_setup/lnd/convert_mksrf/dev/"
+  path   = "./"
   input  = "/glade/p/cesmdata/cseg/inputdata/"
 
-  ;finglc = "mksrf_glacier_15ka.140501"
-  ;finlan = "mksrf_lanwat_15ka.140501"
-  ;finpft = "mksrf_pft_15ka.140501.noCrop.140716"
-  finglc = "rawdata/mksrf_glacier_lgm21ka.example.nc"
-  finlan = "rawdata/mksrf_lanwat_lgm21ka.example.nc"
-  finpft = "rawdata/mksrf_pft_lgm21ka.example.nc"
+  finglc = "mksrf_glacier_lgm21ka.example.nc"
+  finlan = "mksrf_lanwat_lgm21ka.example.nc"
+  finpft = "mksrf_pft_lgm21ka.example.nc"
 
   ifile1 = path+finglc+".nc"
   ifile2 = path+finlan+".nc"
