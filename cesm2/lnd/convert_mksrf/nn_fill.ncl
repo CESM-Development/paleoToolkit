@@ -17,7 +17,7 @@ begin
 
   case   = "21ka"
   path   = "./"
-  input  = "/glade/p/cesmdata/cseg/inputdata/"
+  input  = "$DIN_LOC_ROOT"
 
   finglc = "mksrf_glacier_lgm21ka.example.nc"
   finlan = "mksrf_lanwat_lgm21ka.example.nc"
