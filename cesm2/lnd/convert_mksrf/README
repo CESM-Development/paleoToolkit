@@ -14,7 +14,11 @@ This path will be used in the NCL scripts
 
 2.) Regrid glacier and PFT data to a half degree grid
 
- ncl regrid_GLCMEC_n_PFT.ncl
+IMPORTANT NOTE: HAS TO BE DONE ON A LARGE MEMORY MACHINE!
+
+This step also takes a considerably amount of time.
+
+ execgy ncl regrid_GLCMEC_n_PFT.ncl
 
 3.) Run convert_mksrf to convert Glacier, Land-water, and PFT datasets
 

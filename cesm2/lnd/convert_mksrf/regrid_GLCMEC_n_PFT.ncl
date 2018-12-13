@@ -1,23 +1,63 @@
 ;
 ; Regrid Glacier and PFT datasets to half degree
 ;
-procedure duplicate_file4newgrid ( outfilename:string, ncin:file, ncout:file, outlat, outlon, outmsk, outlatixy, outlongxy )
+
+function mygetfiledims( ncin:file )
+;
+; Get the file dimension names
+;
+local ndims, dimnames
+begin
+   ndims  = dimsizes( getfiledimsizes( ncin ) );
+   dimnames = new( (/ ndims /), "string" );
+   if ( (ndims .le. 1) .or. (ndims .eq. 3) .or. (ndims .eq. 5) )then
+      print( "Can not handle this number of dimensions: "+ndims );
+      exit();
+   end if
+   if ( ndims .ge. 2 )then
+      dimnames(0) = ncin!0;
+      dimnames(1) = ncin!1;
+   end if
+   if ( ndims .ge. 4 )then
+      dimnames(2) = ncin!2;
+      dimnames(3) = ncin!3;
+   end if
+   if ( ndims .ge. 6 )then
+      dimnames(4) = ncin!4;
+      dimnames(5) = ncin!5;
+   end if
+   if ( ndims .ge. 7 )then
+      print( dimnames );
+      print( "Can not handle this many dimensions: ndims="+ndims );
+      exit();
+   end if
+   return( dimnames );
+end
+
+procedure duplicate_file4newgrid ( infilename:string, outfilename:string, ncin:file, ncout:file, ncgrd:file )
 ;
 ; Duplicate the input file on the output file with a new grid
 ;
+local nlat, nlon, dsizes, ndims, dimnames, is_unlim, i, j, vars, vardims, outlat, outlon, outmsk
 begin
    print( "Work on "+outfilename );
    ;
    ; Define Dimensions
    ;
    print( "Define dims" );
+   outlat = (/ ncgrd->LAT /);
+   outlon = (/ ncgrd->LON /);
    nlat = dimsizes(outlat);
    nlon = dimsizes(outlon)
-   dimnames = getfiledims( ncin );
-   dsizes   = getfiledimsizes( ncin );
-   is_unlim = new( (/ dimsizes(dimnames) /), "logical" );
+   dsizes = getfiledimsizes( ncin );
+   ndims  = dimsizes(dsizes);
+   ; Get dimension names
+   ; dimnames = getfiledims( ncin );;  ;;;; Only available in ncl6.5.0 or greater instead do...
+   dimnames = mygetfiledims( ncin );
+   ;
+   is_unlim = new( (/ ndims /), "logical" );
    is_unlim = False;
-   do i = 0, dimsizes(dimnames)-1
+   do i = 0, ndims-1
       if ( dimnames(i) .eq. "time" )then
          is_unlim(i) = True;
       else
@@ -26,14 +66,84 @@ begin
          else
             if ( dimnames(i) .eq. "lon" )then
                dsizes(i) = nlon;
+            else
+               if ( dimnames(i) .eq. "ncl_scalar" )then
+                  dimnames(i) = "scalar";
+               end if
             end if
          end if
       end if
+   end do
+   filedimdef( ncout, dimnames, dsizes, is_unlim );
+   ;
+   ; Define Variables
+   ;
+   print( "Define vars" );
+   vars = getfilevarnames( ncin );
+   do i = 0, dimsizes(vars)-1
+      print( "var: "+vars(i) );
+      vardims = getfilevardims( ncin, vars(i) );
+      do j = 0, dimsizes(vardims)-1
+         if ( vardims(j) .eq. "ncl_scalar" )then
+            vardims(j) = "scalar";
+         end if
+      end do
+      filevardef ( ncout, (/ vars(i) /), (/ typeof(ncin->$vars(i)$) /),  vardims );
+      filevarattdef ( ncout, (/ vars(i) /), ncin->$vars(i)$ );
+      delete( vardims );
+   end do
+   ;
+   ; Global attributes
+   ;
+   print( "set global attributes" );
+   fileattdef( ncout, ncin );
+   date = systemfunc( "date" );
+   desc = "Regrid using regrid_GLCMEC_n_PFT.ncl from: "+infilename;
+   ncout@history = date + " : " + desc + str_get_nl() + ncin@history;
+   ;
+   ; Set static variables
+   ;
+   print( "set static vars" );
+   outmsk = (/ ncgrd->LANDMASK /);
+   outlatixy = (/ ncgrd->LATIXY /);
+   outlongxy = (/ ncgrd->LONGXY /);
+
+   ncout->LAT      = outlat;
+   ncout->LON      = outlon;
+   ncout->LATIXY   = outlatixy;
+   ncout->LONGXY   = outlongxy;
+   if ( typeof(ncout->LANDMASK) .eq. "float" )then
+      ncout->LANDMASK = outmsk;
+   else
+      ncout->LANDMASK = floattoshort(outmsk);
    end if
-   filedimdef( ncoout, dimnames, dsizes, is_unlim );
+   ;
+   ; Go through variables and copy or regrid
+   ;
+   print( "Go through variables and copy or regrid" );
+   do i = 0, dimsizes(vars)-1
+      vardims = getfilevardims( ncin, vars(i) );
+      ; Regrid variables with lat or lon dimensions
+      if ( (any(vardims .eq. "lat") ) .or. (any(vardims .eq. "lon")) )then
+         if ( (vars(i) .ne. "LAT") .and. (vars(i) .ne. "LON") .and. (vars(i) .ne. "LANDMASK") .and. (vars(i) .ne. "LATIXY") .and. (vars(i) .ne. "LONGXY") )then
+            print( "Regrid "+vars(i) );
+            ncout->$vars(i)$ = area_conserve_remap ( ncin->LON, ncin->LAT, ncin->$vars(i)$, outlon, outlat, False );
+            print( "after regrid" );
+         end if
+      ; Otherwise just copy
+      else
+         print( "Copy "+vars(i) );
+         ncout->$vars(i)$ = (/ ncin->$vars(i)$ /);
+      end if
+      delete( vardims )
+   end do
 end
 
 begin
+   if ( ("$DIN_LOC_ROOT" .eq. "") .or. (systemfunc("test -d $DIN_LOC_ROOT; echo $?" ) .ne. 0) )then
+      print( "Env variable: DIN_LOC_ROOT not set or not set to a directory" );
+      exit();
+   end if
    ;
    ; Set Input files and open them
    ;
@@ -66,16 +176,10 @@ begin
    end if
    nco_pft = addfile( outpftfile, "c" );
    ;
-   ; Get grid information on the half degree to regrid to
+   ; Duplicate the file on the new grid
    ;
-   outlat = ncgrd->LAT;
-   outlon = ncgrd->LON;
-   outmsk = ncgrd->LANDMASK;
-   outlatixy = ncgrd->LATIXY;
-   outlongxy = ncgrd->LONGXY;
-
-   duplicate_file4newgrid ( outglacierfile, ncglc, nco_glc, outlat, outlon, outmsk, outlatixy, outlongxy )
-   duplicate_file4newgrid ( outpftfile,     ncpft, nco_pft, outlat, outlon, outmsk, outlatixy, outlongxy )
+   duplicate_file4newgrid ( glacierfile, outglacierfile, ncglc, nco_glc, ncgrd );
+   duplicate_file4newgrid ( pftfile,     outpftfile,     ncpft, nco_pft, ncgrd );
 
    print( "" );
    print( "Successfully regrid files" );
