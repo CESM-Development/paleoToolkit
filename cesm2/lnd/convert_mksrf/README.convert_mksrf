@@ -8,9 +8,9 @@ src:  convert_mksrf.F90
 	!! point to your files
 	!-----------------------------------------------------------------
   	filei  = '/location_to_topography_and_ice/public/topo/topo-ice.0.5degree.myrun.nc'
-  	fileig = '/location_to_cesm_inputdata/lnd/clm2/rawdata/mksrf_glacier.060929.nc'
-  	fileip = '/location_to_cesm_inputdata/lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_landuse_rc1850_c090630.nc'
-  	fileil = '/location_to_cesm_inputdata/lnd/clm2/rawdata/mksrf_lanwat.050425.nc'
+        fileig = 'mksrf_glacier_0.5x0.5_simyr2000.cYYMMDD.nc'                    ! regridded glacier data (on half degree grid)
+        fileip = 'mksrf_landuse_0.5x0.5_potvegclm50_LUH2.cYYMMDD.nc'             ! regridded PFT data (on half degree grid)
+  	fileil = '/location_to_cesm_inputdata/lnd/clm2/rawdata/mksrf_lanwat.050425.nc' ! (on half degree grid)
   	fileog = 'mksrf_glacier_lgm21ka.110106.nc'
   	fileop = 'mksrf_pft_lgm21ka.110106.nc'
   	fileol = 'mksrf_lanwat_lgm21ka.110106.nc'
