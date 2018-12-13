@@ -7,6 +7,30 @@ procedure duplicate_file4newgrid ( outfilename:string, ncin:file, ncout:file, ou
 ;
 begin
    print( "Work on "+outfilename );
+   ;
+   ; Define Dimensions
+   ;
+   print( "Define dims" );
+   nlat = dimsizes(outlat);
+   nlon = dimsizes(outlon)
+   dimnames = getfiledims( ncin );
+   dsizes   = getfiledimsizes( ncin );
+   is_unlim = new( (/ dimsizes(dimnames) /), "logical" );
+   is_unlim = False;
+   do i = 0, dimsizes(dimnames)-1
+      if ( dimnames(i) .eq. "time" )then
+         is_unlim(i) = True;
+      else
+         if ( dimnames(i) .eq. "lat" )then
+            dsizes(i) = nlat;
+         else
+            if ( dimnames(i) .eq. "lon" )then
+               dsizes(i) = nlon;
+            end if
+         end if
+      end if
+   end if
+   filedimdef( ncoout, dimnames, dsizes, is_unlim );
 end
 
 begin
