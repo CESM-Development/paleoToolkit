@@ -11,7 +11,7 @@ RM = rm
 .SUFFIXES: .f90 .F90 .o
 
 FC         = ifort
-FFLAGS     =  -assume bytere -CB -O0 -g
+FFLAGS     =  -assume bytere -CB -O0 -g -traceback -FR
 LIB_NETCDF = -L/glade/apps/opt/netcdf/4.2/intel/default/lib -lnetcdf
 INC_NETCDF = -I/glade/apps/opt/netcdf/4.2/intel/default/include
 

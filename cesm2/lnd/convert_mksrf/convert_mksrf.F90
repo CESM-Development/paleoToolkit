@@ -20,7 +20,7 @@ program convert_mksrf
   integer, parameter :: nlonw = 360  !input grid : longitude points
   integer, parameter :: nlatw = 180  !input grid : latitude  points
   integer, parameter :: num_nat_pft = 15   !number of natural plant types
-  integer, parameter :: num_cft = 63       !number of crop types
+  integer, parameter :: num_cft = 64       !number of crop types
 
   real(r8) :: lon(nlon)                   !longitude dimension array (1d)
   real(r8) :: lat(nlat)                   !latitude dimension array (1d) 
@@ -57,6 +57,7 @@ program convert_mksrf
   integer :: dimlon_id                    !netCDF dimension id
   integer :: dimlat_id                    !netCDF dimension id
   integer :: dimpft_id                    !netCDF dimension id
+  integer :: dimcft_id                    !netCDF dimension id
 
   integer :: lon_id                       !1d longitude array id
   integer :: lat_id                       !1d latitude array id
@@ -68,13 +69,13 @@ program convert_mksrf
   integer :: edgew_id                     !western  edge of grid (edge(4)) id
   integer :: pct_glacier_id               !pct_glacier id
   integer :: pct_pft_id                   !pct_pft id
+  integer :: pct_crop_id                  !pct_crop id
+  integer :: pct_nat_veg_id               !pct_nat_veg id
   integer :: landmask_id                  !landmask id
   integer :: plandmask_id                  !pft landmask id
   integer :: lgmlandmask_id               !lgmlandmask id
   integer :: pct_lake_id                  !pct_lake id
   integer :: pct_wetland_id               !pct_lake id
-  integer :: crop_id                      !crop area id
-  integer :: nat_veg_id                   !natural veg. area id
   integer :: pct_cft_id                   !percent crop type id
 
 
@@ -157,10 +158,10 @@ program convert_mksrf
     call wrap_get_var8 (ncid, plandmask_id, plandmask)
 
 ! get id and var for pft
-    call wrap_inq_varid (ncid, 'PCT_CROP', crop_id   )
-    call wrap_get_var8 (ncid, crop_id, pct_crop)
-    call wrap_inq_varid (ncid, 'PCT_NATVEG', nat_veg_id   )
-    call wrap_get_var8 (ncid, nat_veg_id, pct_nat_veg)
+    call wrap_inq_varid (ncid, 'PCT_CROP', pct_crop_id   )
+    call wrap_get_var8 (ncid, pct_crop_id, pct_crop)
+    call wrap_inq_varid (ncid, 'PCT_NATVEG', pct_nat_veg_id   )
+    call wrap_get_var8 (ncid, pct_nat_veg_id, pct_nat_veg)
     call wrap_inq_varid (ncid, 'PCT_NAT_PFT', pct_pft_id   )
     call wrap_get_var8 (ncid, pct_pft_id, pct_nat_pft)
     call wrap_inq_varid (ncid, 'PCT_CFT', pct_cft_id   )
@@ -448,7 +449,8 @@ program convert_mksrf
 
   call wrap_def_dim (ncid2, 'lon' , nlon, dimlon_id)
   call wrap_def_dim (ncid2, 'lat' , nlat, dimlat_id)
-  call wrap_def_dim (ncid2, 'pft' , numpft+1, dimpft_id)
+  call wrap_def_dim (ncid2, 'natpft', num_nat_pft, dimpft_id)
+  call wrap_def_dim (ncid2, 'cft' , num_cft, dimcft_id)
 
 ! Define grid variables
 
@@ -510,25 +512,26 @@ program convert_mksrf
 
   dim3_id(1) = lon_id
   dim3_id(2) = lat_id
-  dim3_id(3) = dimpft_id
   name = 'percent pft'
   unit = 'unitless'
+  dim3_id(3) = dimpft_id
   call wrap_def_var (ncid2,'PCT_NAT_PFT' ,nf_float, 3, dim3_id, pct_pft_id)
   call wrap_put_att_text (ncid2, pct_pft_id, 'long_name', name)
   call wrap_put_att_text (ncid2, pct_pft_id, 'units'    , unit)
   name = 'percent cft'
   unit = 'unitless'
+  dim3_id(3) = dimcft_id
   call wrap_def_var (ncid2,'PCT_CFT' ,nf_float, 3, dim3_id, pct_cft_id)
   call wrap_put_att_text (ncid2, pct_cft_id, 'long_name', name)
   call wrap_put_att_text (ncid2, pct_cft_id, 'units'    , unit)
   name = 'percent total crop'
   unit = 'unitless'
-  call wrap_def_var (ncid2,'PCT_CROP' ,nf_float, 3, dim3_id, pct_crop_id)
+  call wrap_def_var (ncid2,'PCT_CROP' ,nf_float, 2, dim2_id, pct_crop_id)
   call wrap_put_att_text (ncid2, pct_crop_id, 'long_name', name)
   call wrap_put_att_text (ncid2, pct_crop_id, 'units'    , unit)
   name = 'percent total natural vegetation'
   unit = 'unitless'
-  call wrap_def_var (ncid2,'PCT_NAT_VEG' ,nf_float, 3, dim3_id, pct_nat_veg_id)
+  call wrap_def_var (ncid2,'PCT_NAT_VEG' ,nf_float, 2, dim2_id, pct_nat_veg_id)
   call wrap_put_att_text (ncid2, pct_nat_veg_id, 'long_name', name)
   call wrap_put_att_text (ncid2, pct_nat_veg_id, 'units'    , unit)
 
@@ -552,10 +555,10 @@ program convert_mksrf
   call wrap_put_var_realx (ncid2, edgee_id      , edge(2))
   call wrap_put_var_realx (ncid2, edges_id      , edge(3))
   call wrap_put_var_realx (ncid2, edgew_id      , edge(4))
-  call wrap_put_var_realx (ncid2, pct_pft_id    , pct_nat_pft)
-  call wrap_put_var_realx (ncid2, pct_cft_id    , pct_cft)
   call wrap_put_var_realx (ncid2, pct_crop_id   , pct_crop)
   call wrap_put_var_realx (ncid2, pct_nat_veg_id, pct_nat_veg)
+  call wrap_put_var_realx (ncid2, pct_cft_id    , pct_cft)
+  call wrap_put_var_realx (ncid2, pct_pft_id    , pct_nat_pft)
   call wrap_put_var_realx (ncid2, landmask_id   , landmask)
 
   call wrap_close(ncid2)
