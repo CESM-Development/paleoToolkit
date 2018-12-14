@@ -19,7 +19,8 @@ program convert_mksrf
   integer, parameter :: nlat = 360  !input grid : latitude  points
   integer, parameter :: nlonw = 360  !input grid : longitude points
   integer, parameter :: nlatw = 180  !input grid : latitude  points
-  integer, parameter :: numpft = 16       !number of plant types
+  integer, parameter :: num_nat_pft = 15   !number of natural plant types
+  integer, parameter :: num_cft = 63       !number of crop types
 
   real(r8) :: lon(nlon)                   !longitude dimension array (1d)
   real(r8) :: lat(nlat)                   !latitude dimension array (1d) 
@@ -40,22 +41,17 @@ program convert_mksrf
   real(r8) :: Icemask(nlon,nlat)	  !input ice
   real(r8) :: Topo(nlon,nlat)		  !input top (use for landmask) 
   real(r8) :: lmask(nlon,nlat)	          !input landmask
-! nanr 10oct10
   real(r8) :: plmask(nlon,nlat)	          !pft input landmask
   real(r8) :: pct_glacier(nlon,nlat)      !pct glacier
-  real(r8) :: pct_pft(nlon,nlat,0:numpft) !percent pft
+  real(r8) :: pct_crop(nlon,nlat)         !percent total crop area
+  real(r8) :: pct_nat_veg(nlon,nlat)      !percent total natural veg area
+  real(r8) :: pct_nat_pft(nlon,nlat,0:num_nat_pft) !percent natural pft
+  real(r8) :: pct_cft(nlon,nlat,1:num_cft)         !percent cft
   real(r8) :: landmask(nlon,nlat)         !land mask
-! nanr 10oct10
   real(r8) :: plandmask(nlon,nlat)         !land mask
-! nanr 10octo10
-!  real(r8) :: landmaskw(nlonw,nlatw)      !land mask
   real(r8) :: lgmlandmask(nlon,nlat)      !lgmland mask
   real(r8) :: pct_lake(nlon,nlat)       !pct lake
   real(r8) :: pct_wetland(nlon,nlat)    !pct wetland
-!  nanr 30sep10
-!  real(r8) :: pct_lake(nlonw,nlatw)       !pct lake
-!  real(r8) :: pct_wetland(nlonw,nlatw)    !pct wetland
-!  end nanr
 
 
   integer :: dimlon_id                    !netCDF dimension id
@@ -73,11 +69,13 @@ program convert_mksrf
   integer :: pct_glacier_id               !pct_glacier id
   integer :: pct_pft_id                   !pct_pft id
   integer :: landmask_id                  !landmask id
-! nanr 8oct10
   integer :: plandmask_id                  !pft landmask id
   integer :: lgmlandmask_id               !lgmlandmask id
   integer :: pct_lake_id                  !pct_lake id
   integer :: pct_wetland_id               !pct_lake id
+  integer :: crop_id                      !crop area id
+  integer :: nat_veg_id                   !natural veg. area id
+  integer :: pct_cft_id                   !percent crop type id
 
 
   integer :: i,j                          !indicis
@@ -155,13 +153,18 @@ program convert_mksrf
   if (ret == nf_noerr) then
 
 ! get id and var for landmask
-! nanr:  reading pd landmask from 8oct10
     call wrap_inq_varid (ncid, 'LANDMASK', plandmask_id   )
     call wrap_get_var8 (ncid, plandmask_id, plandmask)
 
 ! get id and var for pft
-    call wrap_inq_varid (ncid, 'PCT_PFT', pct_pft_id   )
-    call wrap_get_var8 (ncid, pct_pft_id, pct_pft)
+    call wrap_inq_varid (ncid, 'PCT_CROP', crop_id   )
+    call wrap_get_var8 (ncid, crop_id, pct_crop)
+    call wrap_inq_varid (ncid, 'PCT_NATVEG', nat_veg_id   )
+    call wrap_get_var8 (ncid, nat_veg_id, pct_nat_veg)
+    call wrap_inq_varid (ncid, 'PCT_NAT_PFT', pct_pft_id   )
+    call wrap_get_var8 (ncid, pct_pft_id, pct_nat_pft)
+    call wrap_inq_varid (ncid, 'PCT_CFT', pct_cft_id   )
+    call wrap_get_var8 (ncid, pct_cft_id, pct_cft)
 
   else
     write(6,*)'cannot open pft file successfully'
@@ -261,37 +264,25 @@ program convert_mksrf
    do i = 1,nlon
     if (ice(i,j)==100) then
     		pct_glacier(i,j) = 100._r8
-    		pct_pft(i,j,0) = 100._r8
-    		pct_pft(i,j,1) = 0._r8
-    		pct_pft(i,j,2) = 0._r8
-    		pct_pft(i,j,3) = 0._r8
-    		pct_pft(i,j,4) = 0._r8
-    		pct_pft(i,j,5) = 0._r8
-    		pct_pft(i,j,6) = 0._r8
-    		pct_pft(i,j,7) = 0._r8
-    		pct_pft(i,j,8) = 0._r8
-    		pct_pft(i,j,9) = 0._r8
-    		pct_pft(i,j,10) = 0._r8
-    		pct_pft(i,j,11) = 0._r8
-    		pct_pft(i,j,12) = 0._r8
-    		pct_pft(i,j,13) = 0._r8
-    		pct_pft(i,j,14) = 0._r8
-    		pct_pft(i,j,15) = 0._r8
-    		pct_pft(i,j,16) = 0._r8
-! nanr 30sep10 - 0.5deg lanwat
+    		pct_crop(i,j)      = 0._r8
+    		pct_nat_veg(i,j)   = 100._r8
+    		pct_nat_pft(i,j,0)  = 100._r8
+    		pct_nat_pft(i,j,1:) = 0._r8
+    		pct_cft(i,j,1)     = 100._r8
+    		pct_cft(i,j,2:)    = 0._r8
     		pct_lake(i,j)    =  0._r8
     		pct_wetland(i,j) =  0._r8
    end if
    ! error checking
    if (pct_glacier(i,j) == 100._r8 .and. pct_wetland(i,j) > 0._r8) then
     	print *,' i,j,latixy,lonxy   = ',i,j,latixy(i,j),longxy(i,j)
-    	print *,' ice,pctgla,pctpft0 = ',ice(i,j),pct_glacier(i,j),pct_pft(i,j,0)
+    	print *,' ice,pctgla,pctpft0 = ',ice(i,j),pct_glacier(i,j),pct_nat_pft(i,j,0)
     	print *,' pctlk/wetland      = ', pct_lake(i,j), pct_wetland(i,j)
     	print *,' ---------------------------------------'
     end if
     if (pct_glacier(i,j) == 100._r8 .and. pct_lake(i,j) > 0._r8) then
     	print *,' i,j,latixy,lonxy   = ',i,j,latixy(i,j),longxy(i,j)
-    	print *,' ice,pctgla,pctpft0 = ',ice(i,j),pct_glacier(i,j),pct_pft(i,j,0)
+    	print *,' ice,pctgla,pctpft0 = ',ice(i,j),pct_glacier(i,j),pct_nat_pft(i,j,0)
     	print *,' pctlk/wetland      = ', pct_lake(i,j), pct_wetland(i,j)
     	print *,' ---------------------------------------'
     end if
@@ -302,28 +293,17 @@ program convert_mksrf
 ! set all new cells to something else (pft13 == 100)
      if(landmask(i,j) == 1 .and. plandmask(i,j) == 0) then
 
-     		pct_pft(i,j,0) = 0._r8
-     		pct_pft(i,j,1) = 0._r8
-     		pct_pft(i,j,2) = 0._r8
-     		pct_pft(i,j,3) = 0._r8
-     		pct_pft(i,j,4) = 0._r8
-     		pct_pft(i,j,5) = 0._r8
-     		pct_pft(i,j,6) = 0._r8
-     		pct_pft(i,j,7) = 0._r8
-     		pct_pft(i,j,8) = 0._r8
-     		pct_pft(i,j,9) = 0._r8
-     		pct_pft(i,j,10) = 0._r8
-     		pct_pft(i,j,11) = 0._r8
-     		pct_pft(i,j,12) = 0._r8
-     		pct_pft(i,j,13) = 100._r8
-     		pct_pft(i,j,14) = 0._r8
-     		pct_pft(i,j,15) = 0._r8
-     		pct_pft(i,j,16) = 0._r8
+    		pct_crop(i,j)      = 0._r8
+    		pct_nat_veg(i,j)   = 0._r8
+     		pct_nat_pft(i,j,0) = 100._r8
+     		pct_nat_pft(i,j,1:) = 0._r8
+    		pct_cft(i,j,1)     = 100._r8
+    		pct_cft(i,j,2:)    = 0._r8
      end if
    enddo
   enddo
   print *,maxval(pct_glacier)
-  print *,'pct_pft data created '
+  print *,'pct_nat_pft data created '
 
 ! nanr 30sep10 - commented out b/c using 05deg lanwat mask
 ! jcount=0
@@ -340,7 +320,6 @@ program convert_mksrf
 !  enddo
 ! end nanr
   print *,'landmask data created '
-! nanr 30sep10  print *,'landmaskw data created '
 
 
 
@@ -529,14 +508,29 @@ program convert_mksrf
 
 ! Define input file specific variables
 
-  name = 'percent pft'
-  unit = 'unitless'
   dim3_id(1) = lon_id
   dim3_id(2) = lat_id
   dim3_id(3) = dimpft_id
-  call wrap_def_var (ncid2,'PCT_PFT' ,nf_float, 3, dim3_id, pct_pft_id)
+  name = 'percent pft'
+  unit = 'unitless'
+  call wrap_def_var (ncid2,'PCT_NAT_PFT' ,nf_float, 3, dim3_id, pct_pft_id)
   call wrap_put_att_text (ncid2, pct_pft_id, 'long_name', name)
   call wrap_put_att_text (ncid2, pct_pft_id, 'units'    , unit)
+  name = 'percent cft'
+  unit = 'unitless'
+  call wrap_def_var (ncid2,'PCT_CFT' ,nf_float, 3, dim3_id, pct_cft_id)
+  call wrap_put_att_text (ncid2, pct_cft_id, 'long_name', name)
+  call wrap_put_att_text (ncid2, pct_cft_id, 'units'    , unit)
+  name = 'percent total crop'
+  unit = 'unitless'
+  call wrap_def_var (ncid2,'PCT_CROP' ,nf_float, 3, dim3_id, pct_crop_id)
+  call wrap_put_att_text (ncid2, pct_crop_id, 'long_name', name)
+  call wrap_put_att_text (ncid2, pct_crop_id, 'units'    , unit)
+  name = 'percent total natural vegetation'
+  unit = 'unitless'
+  call wrap_def_var (ncid2,'PCT_NAT_VEG' ,nf_float, 3, dim3_id, pct_nat_veg_id)
+  call wrap_put_att_text (ncid2, pct_nat_veg_id, 'long_name', name)
+  call wrap_put_att_text (ncid2, pct_nat_veg_id, 'units'    , unit)
 
   name = 'land mask'
   unit = 'unitless'
@@ -558,7 +552,10 @@ program convert_mksrf
   call wrap_put_var_realx (ncid2, edgee_id      , edge(2))
   call wrap_put_var_realx (ncid2, edges_id      , edge(3))
   call wrap_put_var_realx (ncid2, edgew_id      , edge(4))
-  call wrap_put_var_realx (ncid2, pct_pft_id    , pct_pft)
+  call wrap_put_var_realx (ncid2, pct_pft_id    , pct_nat_pft)
+  call wrap_put_var_realx (ncid2, pct_cft_id    , pct_cft)
+  call wrap_put_var_realx (ncid2, pct_crop_id   , pct_crop)
+  call wrap_put_var_realx (ncid2, pct_nat_veg_id, pct_nat_veg)
   call wrap_put_var_realx (ncid2, landmask_id   , landmask)
 
   call wrap_close(ncid2)
@@ -677,20 +674,6 @@ program convert_mksrf
   call wrap_put_var_realx (ncid, pct_lake_id, pct_lake)
   call wrap_put_var_realx (ncid, pct_wetland_id, pct_wetland)
   call wrap_put_var_realx (ncid, landmask_id   , landmask)
-! nanr 30sep10 - moving to 05 deg grid
-!  call wrap_put_var_realx (ncid, lon_id        , lonw)
-!  call wrap_put_var_realx (ncid, lat_id        , latw)
-!  call wrap_put_var_realx (ncid, longxy_id     , longxyw)
-!  call wrap_put_var_realx (ncid, latixy_id     , latixyw)
-!  call wrap_put_var_realx (ncid, edgen_id      , edgew(1))
-!  call wrap_put_var_realx (ncid, edgee_id      , edgew(2))
-!  call wrap_put_var_realx (ncid, edges_id      , edgew(3))
-!  call wrap_put_var_realx (ncid, edgew_id      , edgew(4))
-!  call wrap_put_var_realx (ncid, pct_lake_id, pct_lake)
-!  call wrap_put_var_realx (ncid, pct_wetland_id, pct_wetland)
-!  call wrap_put_var_realx (ncid, landmask_id   , landmaskw)
-! end nanr
-
 
   call wrap_close(ncid)
 
