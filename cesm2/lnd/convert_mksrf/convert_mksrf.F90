@@ -106,6 +106,7 @@ program convert_mksrf
   namelist /convert_mksrf_in/ filei, fileig, fileip, fileil, fileog, fileop, fileol
 
 !-----------------------------------------------------------------
+  write(6,*) "Read in namelist"
   read(5, convert_mksrf_in, iostat=ierr) 
   if (ierr /= 0) then
       write(6,*) 'Trouble reading in input namelist: convert_mksrf'
@@ -113,6 +114,7 @@ program convert_mksrf
   end if
 ! -----------------------------------------------------------------
 
+  write(6,*) "Open: ", filei
   ret = nf_open (filei, nf_nowrite, ncid_pelt)
   if (ret == nf_noerr) then
 
@@ -134,6 +136,7 @@ program convert_mksrf
   endif
   ret = nf_close (ncid_pelt)
 
+  write(6,*) "Open: ", fileig
   ret = nf_open (fileig, nf_nowrite, ncid)
   if (ret == nf_noerr) then
 
@@ -147,6 +150,7 @@ program convert_mksrf
   endif
   ret = nf_close (ncid)
 
+  write(6,*) "Open: ", fileip
   ret = nf_open (fileip, nf_nowrite, ncid)
   if (ret == nf_noerr) then
 
@@ -165,6 +169,7 @@ program convert_mksrf
   endif
   ret = nf_close (ncid)
 
+  write(6,*) "Open: ", fileil
   ret = nf_open (fileil, nf_nowrite, ncid)
   if (ret == nf_noerr) then
 

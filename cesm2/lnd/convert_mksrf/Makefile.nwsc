@@ -10,7 +10,8 @@ RM = rm
 .SUFFIXES:
 .SUFFIXES: .f90 .F90 .o
 
-FC         = ifort -assume byterecl
+FC         = ifort
+FFLAGS     =  -assume bytere -CB -O0 -g
 LIB_NETCDF = -L/glade/apps/opt/netcdf/4.2/intel/default/lib -lnetcdf
 INC_NETCDF = -I/glade/apps/opt/netcdf/4.2/intel/default/include
 
@@ -22,7 +23,7 @@ all: $(TARGETS)
 ## $(EXEDIR)/$(EXENAME): $(OBJS)
 
 convert_mksrf :  convert_mksrf.F90
-	$(FC) -o convert_mksrf convert_mksrf.F90 $(INC_NETCDF) $(LIB_NETCDF)
+	$(FC) $(FFLAGS) -o convert_mksrf convert_mksrf.F90 $(INC_NETCDF) $(LIB_NETCDF)
 
 clean:
 	$(RM) -f $(OBJS)  *.mod $(EXEDIR)/$(EXENAME)
