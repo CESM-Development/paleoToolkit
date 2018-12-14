@@ -295,7 +295,7 @@ program convert_mksrf
      if(landmask(i,j) == 1 .and. plandmask(i,j) == 0) then
 
     		pct_crop(i,j)      = 0._r8
-    		pct_nat_veg(i,j)   = 0._r8
+    		pct_nat_veg(i,j)   = 100._r8
      		pct_nat_pft(i,j,0) = 100._r8
      		pct_nat_pft(i,j,1:) = 0._r8
     		pct_cft(i,j,1)     = 100._r8
