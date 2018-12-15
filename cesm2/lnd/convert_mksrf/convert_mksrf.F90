@@ -3,9 +3,12 @@ program convert_mksrf
   include 'netcdf.inc'
 
 !-----------------------------------------------------------------
+!
+! Convert three of the input raw datasets to mksurfdata_map to 
+! add new data for new glacial ice points.
 ! 
-! TO COMPILE: gmake EXENAME=convert_glacier
-! TO RUN    : ./convert_glacier 
+! TO COMPILE: gmake EXENAME=convert_mksrf
+! TO RUN    : ./convert_mksrf  < convert_mksrf.namelist
 ! make surface type netcdf file
 ! use peltier 1x1 data for glacier information
 ! use 21k data
@@ -19,8 +22,10 @@ program convert_mksrf
   integer, parameter :: nlat = 360  !input grid : latitude  points
   integer, parameter :: nlonw = 360  !input grid : longitude points
   integer, parameter :: nlatw = 180  !input grid : latitude  points
-  integer, parameter :: num_nat_pft = 15   !number of natural plant types
-  integer, parameter :: num_cft = 64       !number of crop types
+  integer, parameter :: num_nat_pft = 15     !number of natural plant types
+  integer, parameter :: num_cft = 64         !number of crop types
+  integer, parameter :: num_z = 61           !number of elevations for glaciers
+  integer, parameter :: num_z_edge = num_z+1 !number of elevations for glaciers
 
   real(r8) :: lon(nlon)                   !longitude dimension array (1d)
   real(r8) :: lat(nlat)                   !latitude dimension array (1d) 
@@ -34,30 +39,36 @@ program convert_mksrf
   real(r8) :: edgew(4)                    !N,E,S,W edges of grid
   real(r8) :: dx,dy                       !grid increments
   real(r8) :: dxw,dyw                     !grid increments
-  real(r8) :: delta		          ! tolerance
+  real(r8) :: delta                    ! tolerance
  
-  real(r8) :: ice(nlon,nlat)		  !Icemask (after lat flip)
-  real(r8) :: top(nlon,nlat)		  !Topo ( " ") 
-  real(r8) :: Icemask(nlon,nlat)	  !input ice
-  real(r8) :: Topo(nlon,nlat)		  !input top (use for landmask) 
-  real(r8) :: lmask(nlon,nlat)	          !input landmask
-  real(r8) :: plmask(nlon,nlat)	          !pft input landmask
+  real(r8) :: ice(nlon,nlat)            !Icemask (after lat flip)
+  real(r8) :: top(nlon,nlat)            !Topo ( " ") 
+  real(r8) :: Icemask(nlon,nlat)       !input ice
+  real(r8) :: Topo(nlon,nlat)            !input top (use for landmask) 
+  real(r8) :: lmask(nlon,nlat)               !input landmask
+  real(r8) :: plmask(nlon,nlat)               !pft input landmask
   real(r8) :: pct_glacier(nlon,nlat)      !pct glacier
+  real(r8) :: pct_glc_gic(nlon,nlat,num_z)!pct glacier/ice cap coverage
+  real(r8) :: pct_glc_ice(nlon,nlat,num_z)!pct glacier icesheet coverage
   real(r8) :: pct_crop(nlon,nlat)         !percent total crop area
   real(r8) :: pct_nat_veg(nlon,nlat)      !percent total natural veg area
   real(r8) :: pct_nat_pft(nlon,nlat,0:num_nat_pft) !percent natural pft
   real(r8) :: pct_cft(nlon,nlat,1:num_cft)         !percent cft
   real(r8) :: landmask(nlon,nlat)         !land mask
-  real(r8) :: plandmask(nlon,nlat)         !land mask
+  real(r8) :: plandmask(nlon,nlat)        !land mask
   real(r8) :: lgmlandmask(nlon,nlat)      !lgmland mask
-  real(r8) :: pct_lake(nlon,nlat)       !pct lake
-  real(r8) :: pct_wetland(nlon,nlat)    !pct wetland
+  real(r8) :: pct_lake(nlon,nlat)         !pct lake
+  real(r8) :: pct_wetland(nlon,nlat)      !pct wetland
+  real(r8) :: bin_center(num_z)           !glacier elevation centers
+  real(r8) :: bin_edge(num_z_edge)        !glacier elevation edges
 
 
   integer :: dimlon_id                    !netCDF dimension id
   integer :: dimlat_id                    !netCDF dimension id
   integer :: dimpft_id                    !netCDF dimension id
   integer :: dimcft_id                    !netCDF dimension id
+  integer :: dimz_id                      !netCDF dimension id
+  integer :: dimze_id                     !netCDF dimension id
 
   integer :: lon_id                       !1d longitude array id
   integer :: lat_id                       !1d latitude array id
@@ -67,7 +78,11 @@ program convert_mksrf
   integer :: edgee_id                     !eastern  edge of grid (edge(2)) id
   integer :: edges_id                     !southern edge of grid (edge(3)) id
   integer :: edgew_id                     !western  edge of grid (edge(4)) id
+  integer :: bin_center_id                !bin_center id
+  integer :: bin_edge_id                  !bin_edge   id
   integer :: pct_glacier_id               !pct_glacier id
+  integer :: pct_glc_gic_id               !pct_glacier/ice cap coverage id
+  integer :: pct_glc_ice_id               !pct_glacier ice sheet coverage id
   integer :: pct_pft_id                   !pct_pft id
   integer :: pct_crop_id                  !pct_crop id
   integer :: pct_nat_veg_id               !pct_nat_veg id
@@ -87,7 +102,7 @@ program convert_mksrf
   integer :: ncid_pelt                    !netCDF file id
   integer htopo_p1_id                     ! input topo file vars
   integer ice_p1_id                       ! input topo file vars
-  integer ret     		          ! return id
+  integer ret                         ! return id
   integer :: dim1_id(1)                   !netCDF dimension id for 1-d variables
   integer :: dim2_id(2)                   !netCDF dimension id for 2-d variables
   integer :: dim3_id(3)                   !netCDF dimension id for 3-d variables
@@ -139,9 +154,17 @@ program convert_mksrf
   ret = nf_open (fileig, nf_nowrite, ncid)
   if (ret == nf_noerr) then
 
-! get id and var for glacier (0-100)
+    ! get id and var for glacier (0-100)
     call wrap_inq_varid (ncid, 'PCT_GLACIER', pct_glacier_id   )
     call wrap_get_var8 (ncid, pct_glacier_id, pct_glacier)
+    call wrap_inq_varid (ncid, 'PCT_GLC_GIC', pct_glc_gic_id   )
+    call wrap_get_var8 (ncid, pct_glc_gic_id, pct_glc_gic)
+    call wrap_inq_varid (ncid, 'PCT_GLC_ICESHEET', pct_glc_ice_id   )
+    call wrap_get_var8 (ncid, pct_glc_ice_id, pct_glc_ice)
+    call wrap_inq_varid (ncid, 'BIN_CENTERS', bin_center_id   )
+    call wrap_get_var8 (ncid, bin_center_id,  bin_center)
+    call wrap_inq_varid (ncid, 'BIN_EDGES',   bin_edge_id   )
+    call wrap_get_var8 (ncid, bin_edge_id,    bin_edge)
 
   else
     write(6,*)'cannot open glacier file successfully'
@@ -264,28 +287,28 @@ program convert_mksrf
   do j = 1,nlat
    do i = 1,nlon
     if (ice(i,j)==100) then
-    		pct_glacier(i,j) = 100._r8
-    		pct_crop(i,j)      = 0._r8
-    		pct_nat_veg(i,j)   = 100._r8
-    		pct_nat_pft(i,j,0)  = 100._r8
-    		pct_nat_pft(i,j,1:) = 0._r8
-    		pct_cft(i,j,1)     = 100._r8
-    		pct_cft(i,j,2:)    = 0._r8
-    		pct_lake(i,j)    =  0._r8
-    		pct_wetland(i,j) =  0._r8
+              pct_glacier(i,j) = 100._r8
+              pct_crop(i,j)      = 0._r8
+              pct_nat_veg(i,j)   = 100._r8
+              pct_nat_pft(i,j,0)  = 100._r8
+              pct_nat_pft(i,j,1:) = 0._r8
+              pct_cft(i,j,1)     = 100._r8
+              pct_cft(i,j,2:)    = 0._r8
+              pct_lake(i,j)    =  0._r8
+              pct_wetland(i,j) =  0._r8
    end if
    ! error checking
    if (pct_glacier(i,j) == 100._r8 .and. pct_wetland(i,j) > 0._r8) then
-    	print *,' i,j,latixy,lonxy   = ',i,j,latixy(i,j),longxy(i,j)
-    	print *,' ice,pctgla,pctpft0 = ',ice(i,j),pct_glacier(i,j),pct_nat_pft(i,j,0)
-    	print *,' pctlk/wetland      = ', pct_lake(i,j), pct_wetland(i,j)
-    	print *,' ---------------------------------------'
+         print *,' i,j,latixy,lonxy   = ',i,j,latixy(i,j),longxy(i,j)
+         print *,' ice,pctgla,pctpft0 = ',ice(i,j),pct_glacier(i,j),pct_nat_pft(i,j,0)
+         print *,' pctlk/wetland      = ', pct_lake(i,j), pct_wetland(i,j)
+         print *,' ---------------------------------------'
     end if
     if (pct_glacier(i,j) == 100._r8 .and. pct_lake(i,j) > 0._r8) then
-    	print *,' i,j,latixy,lonxy   = ',i,j,latixy(i,j),longxy(i,j)
-    	print *,' ice,pctgla,pctpft0 = ',ice(i,j),pct_glacier(i,j),pct_nat_pft(i,j,0)
-    	print *,' pctlk/wetland      = ', pct_lake(i,j), pct_wetland(i,j)
-    	print *,' ---------------------------------------'
+         print *,' i,j,latixy,lonxy   = ',i,j,latixy(i,j),longxy(i,j)
+         print *,' ice,pctgla,pctpft0 = ',ice(i,j),pct_glacier(i,j),pct_nat_pft(i,j,0)
+         print *,' pctlk/wetland      = ', pct_lake(i,j), pct_wetland(i,j)
+         print *,' ---------------------------------------'
     end if
 
 ! nanr 10/8/10 - padding the pfts to 100.
@@ -294,12 +317,12 @@ program convert_mksrf
 ! set all new cells to something else (pft13 == 100)
      if(landmask(i,j) == 1 .and. plandmask(i,j) == 0) then
 
-    		pct_crop(i,j)      = 0._r8
-    		pct_nat_veg(i,j)   = 100._r8
-     		pct_nat_pft(i,j,0) = 100._r8
-     		pct_nat_pft(i,j,1:) = 0._r8
-    		pct_cft(i,j,1)     = 100._r8
-    		pct_cft(i,j,2:)    = 0._r8
+              pct_crop(i,j)      = 0._r8
+              pct_nat_veg(i,j)   = 100._r8
+               pct_nat_pft(i,j,0) = 100._r8
+               pct_nat_pft(i,j,1:) = 0._r8
+              pct_cft(i,j,1)     = 100._r8
+              pct_cft(i,j,2:)    = 0._r8
      end if
    enddo
   enddo
@@ -340,6 +363,8 @@ program convert_mksrf
 
   call wrap_def_dim (ncid, 'lon' , nlon, dimlon_id)
   call wrap_def_dim (ncid, 'lat' , nlat, dimlat_id)
+  call wrap_def_dim (ncid, 'z', num_z, dimz_id)
+  call wrap_def_dim (ncid, 'z_edge', num_z_edge, dimze_id)
 
 ! Define grid variables
 
@@ -401,11 +426,39 @@ program convert_mksrf
 
   name = 'percent glacier'
   unit = 'unitless'
-  dim2_id(1) = lon_id
-  dim2_id(2) = lat_id
+  dim2_id(1) = dimlon_id
+  dim2_id(2) = dimlat_id
   call wrap_def_var (ncid ,'PCT_GLACIER' ,nf_float, 2, dim2_id, pct_glacier_id)
   call wrap_put_att_text (ncid, pct_glacier_id, 'long_name', name)
   call wrap_put_att_text (ncid, pct_glacier_id, 'units'    , unit)
+  name = 'percent glacier/ice cap coverage'
+  unit = 'unitless'
+  dim3_id(1) = dimlon_id
+  dim3_id(2) = dimlat_id
+  dim3_id(3) = dimz_id
+  call wrap_def_var (ncid ,'PCT_GLC_GIC' ,nf_float, 3, dim3_id, pct_glc_gic_id)
+  call wrap_put_att_text (ncid, pct_glc_gic_id, 'long_name', name)
+  call wrap_put_att_text (ncid, pct_glc_gic_id, 'units'    , unit)
+  name = 'percent glacier icesheet coverage'
+  unit = 'unitless'
+  dim3_id(1) = dimlon_id
+  dim3_id(2) = dimlat_id
+  dim3_id(3) = dimz_id
+  call wrap_def_var (ncid ,'PCT_GLC_ICESHEET' ,nf_float, 3, dim3_id, pct_glc_ice_id)
+  call wrap_put_att_text (ncid, pct_glc_ice_id, 'long_name', name)
+  call wrap_put_att_text (ncid, pct_glc_ice_id, 'units'    , unit)
+  name = 'Elevation centers'
+  unit = 'm'
+  dim2_id(1) = dimz_id
+  call wrap_def_var (ncid ,'BIN_CENTERS' ,nf_float, 1, dim2_id, bin_center)
+  call wrap_put_att_text (ncid, bin_center_id, 'long_name', name)
+  call wrap_put_att_text (ncid, bin_center_id, 'units'    , unit)
+  name = 'Elevation edges'
+  unit = 'm'
+  dim2_id(1) = dimze_id
+  call wrap_def_var (ncid ,'BIN_EDGES' ,nf_float, 1, dim2_id, bin_edge)
+  call wrap_put_att_text (ncid, bin_edge_id, 'long_name', name)
+  call wrap_put_att_text (ncid, bin_edge_id, 'units'    , unit)
 
   name = 'land mask'
   unit = 'unitless'
@@ -431,6 +484,10 @@ program convert_mksrf
   call wrap_put_var_realx (ncid, edges_id      , edge(3))
   call wrap_put_var_realx (ncid, edgew_id      , edge(4))
   call wrap_put_var_realx (ncid, pct_glacier_id, pct_glacier)
+  call wrap_put_var_realx (ncid, pct_glc_gic_id, pct_glc_gic)
+  call wrap_put_var_realx (ncid, pct_glc_ice_id, pct_glc_ice)
+  call wrap_put_var_realx (ncid, bin_center_id, bin_center)
+  call wrap_put_var_realx (ncid, bin_edge_id   , bin_edge)
   call wrap_put_var_realx (ncid, landmask_id   , landmask)
   ! call wrap_put_var_realx (ncid, lgmlandmask_id   , lgmlandmask)
 
