@@ -449,14 +449,14 @@ program convert_mksrf
   call wrap_put_att_text (ncid, pct_glc_ice_id, 'units'    , unit)
   name = 'Elevation centers'
   unit = 'm'
-  dim2_id(1) = dimz_id
-  call wrap_def_var (ncid ,'BIN_CENTERS' ,nf_float, 1, dim2_id, bin_center)
+  dim1_id(1) = dimz_id
+  call wrap_def_var (ncid ,'BIN_CENTERS' ,nf_float, 1, dim1_id, bin_center_id)
   call wrap_put_att_text (ncid, bin_center_id, 'long_name', name)
   call wrap_put_att_text (ncid, bin_center_id, 'units'    , unit)
   name = 'Elevation edges'
   unit = 'm'
-  dim2_id(1) = dimze_id
-  call wrap_def_var (ncid ,'BIN_EDGES' ,nf_float, 1, dim2_id, bin_edge)
+  dim1_id(1) = dimze_id
+  call wrap_def_var (ncid ,'BIN_EDGES' ,nf_float, 1, dim1_id, bin_edge_id)
   call wrap_put_att_text (ncid, bin_edge_id, 'long_name', name)
   call wrap_put_att_text (ncid, bin_edge_id, 'units'    , unit)
 
