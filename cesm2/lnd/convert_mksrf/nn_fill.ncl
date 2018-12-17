@@ -19,9 +19,9 @@ begin
   path   = "./"
   input  = "$DIN_LOC_ROOT"
 
-  finglc = "mksrf_glacier_lgm21ka.example.nc"
-  finlan = "mksrf_lanwat_lgm21ka.example.nc"
-  finpft = "mksrf_pft_lgm21ka.example.nc"
+  finglc = "mksrf_glacier_lgm21ka.example"
+  finlan = "mksrf_lanwat_lgm21ka.example"
+  finpft = "mksrf_pft_lgm21ka.example"
 
   ifile1 = path+finglc+".nc"
   ifile2 = path+finlan+".nc"
@@ -49,6 +49,7 @@ begin
 
 
   ; glaciers
+  print( "Open: "+ifile1 );
   in1 = addfile(ifile1,"r")
   pctgla  = in1->PCT_GLACIER
   newmask = in1->LANDMASK
@@ -58,6 +59,7 @@ begin
   in1_vars   = getfilevarnames(in1)
 
   ; lakes and wetlands
+  print( "Open: "+ifile2 );
   in2 = addfile(ifile2,"r")
   pctlak = in2->PCT_LAKE
   pctwet = in2->PCT_WETLAND
@@ -65,8 +67,12 @@ begin
   in2_vars   = getfilevarnames(in2)
 
   ; pft
+  print( "Open: "+ifile3 );
   in3 = addfile(ifile3,"r")
-  pctpft   = in3->PCT_PFT
+  pctnatvg = in3->PCT_NAT_VEG
+  pctcrop  = in3->PCT_CROP
+  pctpft   = in3->PCT_NAT_PFT
+  pctcft   = in3->PCT_CFT
   in3_global = getvaratts(in3)
   in3_vars   = getfilevarnames(in3)
 
@@ -78,6 +84,7 @@ begin
   ; soitex
   domapunits = 1
   if (domapunits .eq. 1) then
+    print( "Open: "+ifile4 );
     in4 = addfile(ifile4,"r")
     mapunits   = in4->MAPUNITS
     maskmap    = in4->LANDMASK
@@ -88,6 +95,7 @@ begin
   end if
 
   ; organic
+  print( "Open: "+ifile5 );
   in5 = addfile(ifile5,"r")
   orig_organic3d = in5->ORGANIC
   organic3d = in5->ORGANIC
@@ -98,6 +106,7 @@ begin
 
 
   ; fmax
+  print( "Open: "+ifile6 );
   in6 = addfile(ifile6,"r")
   fmax   = in6->FMAX
   pdmask = in6->LANDMASK
@@ -141,7 +150,7 @@ begin
   in9 = addfile(ifile9,"r")
   in9_vars   = getfilevarnames(in9)
 
-  numpft = 17
+  numpft = 15
   pdmaskfill = pdmask
 
   ; fill in 0 and 359
@@ -165,7 +174,7 @@ if (doThis .eq. 1) then
                 pctlak(i,j)      = 0.
                 organic3d(:,i,j) = 0.
                 npctpft(0,i,j)    = 100.		; bareground under new glaciers
-                npctpft(1:16,i,j) = 0.
+                npctpft(1:numpft-1,i,j) = 0.
                 hbot(:,:,i,j)    = 0.
                 htop(:,:,i,j)    = 0.
                 lai( :,:,i,j)    = 0.
@@ -210,7 +219,7 @@ end if		; doThis loop
                 pctlak(i,j)      = 0.
                 organic3d(:,i,j) = 0.
                 npctpft(0,i,j)    = 100.
-                npctpft(1:16,i,j) = 0.
+                npctpft(1:numpft-1,i,j) = 0.
                 hbot(:,:,i,j)    = 0.
                 htop(:,:,i,j)    = 0.
                 lai( :,:,i,j)    = 0.
@@ -273,7 +282,7 @@ end if		; doThis loop
 			pdmaskfill(i,j) = 1
 			if (pctgla(usei,usej) .eq. 100.) then
                 		npctpft(0,i,j) = 100.
-                		npctpft(1:16,i,j) = 0.
+                		npctpft(1:numpft-1,i,j) = 0.
                 		pctgla(i,j)   = 100.
                 		hbot(:,:,i,j) = 0.
                 		htop(:,:,i,j) = 0.
@@ -325,7 +334,7 @@ end if		; doThis loop
 				pctwet(i,j) = 0.
 				pctgla(i,j) = 0.
 				npctpft(0,i,j) = 100.
-				npctpft(1:16,i,j) = 0.
+				npctpft(1:numpft-1,i,j) = 0.
 			else 
 			     ; partially glaciated cell is set to part bareground, part glacier
 			     ; add any missing ground to bareground
@@ -360,6 +369,7 @@ end if		; doThis loop
         if (sumpft .ne. 100.0 .and. newmask(i,j) .eq. 1) then
 		sumpft = 0.
 		osumpft = 0.
+                m = numpft-1
                 sumpft  = dim_sum_n(npctpft(m,i,j),0)
                 osumpft = dim_sum_n(opctpft(m,i,j),0)
 		if (sumpft .ne. 100.) then
@@ -790,7 +800,7 @@ end if		; do map units look
   end if
 
 
-  
+  print( "Successfully ran nn_fill" );  
 
 end
 
