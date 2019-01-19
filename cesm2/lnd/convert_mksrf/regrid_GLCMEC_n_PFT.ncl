@@ -34,6 +34,24 @@ begin
    return( dimnames );
 end
 
+function NormalizeTo100_ ( array[*][*][*]:numeric )
+;
+; Normalize the incoming array to 100
+;
+local temp, i, j, sumarray;
+begin
+   temp = array;
+   do i = 0, dimsizes(array(0,:,0))-1
+   do j = 0, dimsizes(array(0,0,:))-1
+       sumarray = sum(array(:,i,j));
+       if ( (sumarray .gt. 0.0d00) .and. (abs(sumarray - 100.0) .gt. 1.d-8) )then
+          temp(:,i,j) = temp(:,i,j)*100.0d00 / sumarray
+       end if
+   end do
+   end do
+   return( temp );
+end
+
 procedure duplicate_file4newgrid ( infilename:string, outfilename:string, ncin:file, ncout:file, ncgrd:file )
 ;
 ; Duplicate the input file on the output file with a new grid
@@ -88,7 +106,11 @@ begin
             vardims(j) = "scalar";
          end if
       end do
-      filevardef ( ncout, (/ vars(i) /), (/ typeof(ncin->$vars(i)$) /),  vardims );
+      if ( typeof(ncin->$vars(i)$) .eq. "short" )then
+         filevardef ( ncout, (/ vars(i) /), "float",  vardims );
+      else
+         filevardef ( ncout, (/ vars(i) /), (/ typeof(ncin->$vars(i)$) /),  vardims );
+      end if
       filevarattdef ( ncout, (/ vars(i) /), ncin->$vars(i)$ );
       delete( vardims );
    end do
@@ -112,11 +134,7 @@ begin
    ncout->LON      = outlon;
    ncout->LATIXY   = outlatixy;
    ncout->LONGXY   = outlongxy;
-   if ( typeof(ncout->LANDMASK) .eq. "float" )then
-      ncout->LANDMASK = outmsk;
-   else
-      ncout->LANDMASK = floattoshort(outmsk);
-   end if
+   ncout->LANDMASK = outmsk;
    ;
    ; Go through variables and copy or regrid
    ;
@@ -129,6 +147,10 @@ begin
             print( "Regrid "+vars(i) );
             ncout->$vars(i)$ = area_conserve_remap ( ncin->LON, ncin->LAT, ncin->$vars(i)$, outlon, outlat, False );
             print( "after regrid" );
+            if ( vars(i) .eq. "PCT_NAT_PFT" )then
+               print( "Make sure PCT_NAT_PFT still sums to 100.0" );
+               ncout->$vars(i)$ = NormalizeTo100_( ncout->$vars(i)$ );
+            end if
          end if
       ; Otherwise just copy
       else
