@@ -18,7 +18,11 @@ IMPORTANT NOTE: HAS TO BE DONE ON A LARGE MEMORY MACHINE!
 
 This step also takes several hours of compute time.
 
- execdav ncl regrid_GLCMEC_n_PFT.ncl
+ sbatch runregrid.csh
+
+or
+
+ ncl regrid_GLCMEC_n_PFT.ncl
 
 3.) Run convert_mksrf to convert Glacier, Land-water, and PFT datasets
 
