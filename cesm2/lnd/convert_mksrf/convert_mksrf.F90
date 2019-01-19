@@ -588,7 +588,7 @@ program convert_mksrf
   call wrap_put_att_text (ncid2, pct_crop_id, 'units'    , unit)
   name = 'percent total natural vegetation'
   unit = 'unitless'
-  call wrap_def_var (ncid2,'PCT_NAT_VEG' ,nf_float, 2, dim2_id, pct_nat_veg_id)
+  call wrap_def_var (ncid2,'PCT_NATVEG' ,nf_float, 2, dim2_id, pct_nat_veg_id)
   call wrap_put_att_text (ncid2, pct_nat_veg_id, 'long_name', name)
   call wrap_put_att_text (ncid2, pct_nat_veg_id, 'units'    , unit)
 
