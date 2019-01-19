@@ -65,16 +65,24 @@ begin
   pctwet = in2->PCT_WETLAND
   in2_global = getvaratts(in2)
   in2_vars   = getfilevarnames(in2)
+  if ( any(newmask .ne. in2->LANDMASK) )then
+     print( "Lake/wetlands landmask does NOT match the glacier mask" )
+     exit;
+  end if
 
   ; pft
   print( "Open: "+ifile3 );
   in3 = addfile(ifile3,"r")
-  pctnatvg = in3->PCT_NAT_VEG
+  pctnatvg = in3->PCT_NATVEG
   pctcrop  = in3->PCT_CROP
   pctpft   = in3->PCT_NAT_PFT
   pctcft   = in3->PCT_CFT
   in3_global = getvaratts(in3)
   in3_vars   = getfilevarnames(in3)
+  if ( any(newmask .ne. in3->LANDMASK) )then
+     print( "PFT landmask does NOT match the glacier mask" )
+     exit;
+  end if
 
   npctpft = pctpft
   opctpft = pctpft
@@ -82,7 +90,7 @@ begin
 
 
   ; soitex
-  domapunits = 1
+  domapunits = 0
   if (domapunits .eq. 1) then
     print( "Open: "+ifile4 );
     in4 = addfile(ifile4,"r")
@@ -153,16 +161,22 @@ begin
   numpft = 15
   pdmaskfill = pdmask
 
+  minlat = 0
+  minlon = 0
+  maxlat = 360-1
+  maxlon = 720-1
   ; fill in 0 and 359
 
   ; New land points
-doThis = 0
+doThis = 1
 if (doThis .eq. 1) then
+  do i=minlat,maxlat  				; lat
+  do j=minlon,maxlon                            ; lon
     if(pdmask(i,j) .eq. 0 .and. newmask(i,j) .eq. 1) then
 
   	; fill in  fmax on longitude seams
-  	fmax(i,j) = where(pdmask(:,maxlon) .eq. 0 .and. newmask(:,maxlon) .eq.1, 0.365782, fmax(:,maxlon))
-  	fmax(i,j) = where(pdmask(:,minlon) .eq. 0 .and. newmask(:,minlon) .eq.1, 0.365782, fmax(:,minlon))
+  	fmax(i,j) = where(pdmask(i,j) .eq. 0 .and. newmask(i,j) .eq.1, 0.365782, fmax(i,j))
+  	;fmax(i,j) = where(pdmask(i,j) .eq. 0 .and. newmask(i,j) .eq.1, 0.365782, fmax(:,minlon))
 
 	assigned = 0
 
@@ -180,8 +194,10 @@ if (doThis .eq. 1) then
                 lai( :,:,i,j)    = 0.
                 sai( :,:,i,j)    = 0.
 		assigned = 1
-	end if
-     end if
+ 	end if
+    end if
+  end do
+  end do
 end if		; doThis loop
 	
 
@@ -192,10 +208,7 @@ end if		; doThis loop
   do_nn = 1
 
   if (do_nn .eq. 1)
-  minlat = 0
-  minlon = 0
-  maxlat = 360-1
-  maxlon = 720-1
+  print( "Do the nearest neighbor interpolation" );
   maxlatm2 = 360-2
   maxlonm2 = 720-2
   minlatp1 = 1
@@ -214,6 +227,7 @@ end if		; doThis loop
 
 	fmax(i,j) = 0.365241
        	if (pctgla(i,j) .eq. 100) then
+                print( "Fill: i="+i+" j="+j );
                 soic2d(i,j)      = 15
                 pctwet(i,j)      = 0.
                 pctlak(i,j)      = 0.
@@ -339,7 +353,6 @@ end if		; doThis loop
 			     ; partially glaciated cell is set to part bareground, part glacier
 			     ; add any missing ground to bareground
 			     if (pctgla(i,j) .eq. 0. .and. sumpft .lt. 100.) then
-				oldbare = 0
 				oldbare = npctpft(0,i,j)
 			   	npctpft(0,i,j)  = oldbare + 100.-sumpft
 			     else
@@ -362,10 +375,17 @@ end if		; doThis loop
         end if 		; 100% glacier if loop
     end if 		; matching landmask / nn loop
         ; check all pfts
-        sumpft = 0.
-        do m = 0, numpft-1
-                sumpft = sumpft + npctpft(m,i,j)
-        end do
+        sumpft = sum(npctpft(:,i,j))
+        if(newmask(i,j) .eq. 1. .and. pctgla(i,j) .gt. 0. .and.  sumpft .ne. 100. ) then    ;this solves problem for land points with 0<pctgla<100
+              npctpft(0,i,j) = 100.
+              npctpft(1:numpft-1,i,j) = 0.
+              sumpft = sum(npctpft(:,i,j))
+        else if(newmask(i,j) .eq. 1. .and. pctgla(i,j) .eq. 0. .and.  sumpft .ne. 100. ) then    ;this solves problem for land points with pctgla=0
+              npctpft(0,i,j) = 100.
+              npctpft(1:numpft-1,i,j) = 0.
+              sumpft = sum(npctpft(:,i,j))
+        end if
+        end if
         if (sumpft .ne. 100.0 .and. newmask(i,j) .eq. 1) then
 		sumpft = 0.
 		osumpft = 0.
@@ -384,7 +404,6 @@ end if		; doThis loop
   end do      			; iteration loop
 
   end if			; do_nn loop
-
 
 ; -----------------------------------------------
 ; Write output files
@@ -531,7 +550,6 @@ end if		; doThis loop
   print(" soitex ")
 ; ========================================
 
-domapunits = 1
 if (domapunits .eq. 1) then
 
  ; copy global attributes
@@ -550,7 +568,7 @@ if (domapunits .eq. 1) then
   if (.not.all(ismissing(in4_vars))) then
         do i = 0, dimsizes(in4_vars) - 1
                 usevar = in4_vars(i)
-                print("i = " + i + " in4vars = " + in4_vars(i))
+                print("i = " + i + " in4_vars = " + in4_vars(i))
                 if (in4_vars(i) .ne."MAPUNITS" .and.in4_vars(i) .ne."LANDMASK") then
                         o4->$in4_vars(i)$ = in4->$in4_vars(i)$
                         print("writing var ->" + in4_vars(i) )
@@ -678,6 +696,8 @@ end if		; do map units look
 
   ; copy variables
   if (.not.all(ismissing(in7_vars))) then
+        o7->LATIXY = in3->LATIXY;
+        o7->LONGXY = in3->LONGXY;
         do i = 0, dimsizes(in7_vars) - 1
                 usevar = in7_vars(i)
                 print("i = " + i + " in7vars = " + in7_vars(i))
