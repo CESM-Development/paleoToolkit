@@ -2,40 +2,6 @@
 ; Regrid Glacier and PFT datasets to half degree
 ;
 
-function mygetfiledims( ncin:file )
-;
-; Get the file dimension names
-;
-local ndims, dimnames
-begin
-   ndims  = dimsizes( getfiledimsizes( ncin ) );
-   dimnames = new( (/ ndims /), "string" );
-   if ( (ndims .le. 1) .or. (ndims .eq. 5) )then
-      print( "Can not handle this number of dimensions: "+ndims );
-      exit();
-   end if
-   if ( ndims .ge. 2 )then
-      dimnames(0) = ncin!0;
-      dimnames(1) = ncin!1;
-   end if
-   if ( ndims .ge. 3 )then
-      dimnames(2) = ncin!2;
-   end if
-   if ( ndims .ge. 4 )then
-      dimnames(3) = ncin!3;
-   end if
-   if ( ndims .ge. 6 )then
-      dimnames(4) = ncin!4;
-      dimnames(5) = ncin!5;
-   end if
-   if ( ndims .ge. 7 )then
-      print( dimnames );
-      print( "Can not handle this many dimensions: ndims="+ndims );
-      exit();
-   end if
-   return( dimnames );
-end
-
 function NormalizeTo100_ ( array[*][*][*]:numeric )
 ;
 ; Normalize the incoming array to 100
@@ -72,8 +38,7 @@ begin
    dsizes = getfiledimsizes( ncin );
    ndims  = dimsizes(dsizes);
    ; Get dimension names
-   ; dimnames = getfiledims( ncin );;  ;;;; Only available in ncl6.5.0 or greater instead do...
-   dimnames = mygetfiledims( ncin );
+   dimnames = getfiledims( ncin );
    ;
    is_unlim = new( (/ ndims /), "logical" );
    is_unlim = False;
