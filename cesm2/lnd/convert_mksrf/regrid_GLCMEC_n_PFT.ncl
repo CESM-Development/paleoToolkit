@@ -10,7 +10,7 @@ local ndims, dimnames
 begin
    ndims  = dimsizes( getfiledimsizes( ncin ) );
    dimnames = new( (/ ndims /), "string" );
-   if ( (ndims .le. 1) .or. (ndims .eq. 3) .or. (ndims .eq. 5) )then
+   if ( (ndims .le. 1) .or. (ndims .eq. 5) )then
       print( "Can not handle this number of dimensions: "+ndims );
       exit();
    end if
@@ -18,8 +18,10 @@ begin
       dimnames(0) = ncin!0;
       dimnames(1) = ncin!1;
    end if
-   if ( ndims .ge. 4 )then
+   if ( ndims .ge. 3 )then
       dimnames(2) = ncin!2;
+   end if
+   if ( ndims .ge. 4 )then
       dimnames(3) = ncin!3;
    end if
    if ( ndims .ge. 6 )then
@@ -106,7 +108,7 @@ begin
             vardims(j) = "scalar";
          end if
       end do
-      if ( typeof(ncin->$vars(i)$) .eq. "short" )then
+      if ( (typeof(ncin->$vars(i)$) .eq. "short") .or. (typeof(ncin->$vars(i)$) .eq. "integer") )then
          filevardef ( ncout, (/ vars(i) /), "float",  vardims );
       else
          filevardef ( ncout, (/ vars(i) /), (/ typeof(ncin->$vars(i)$) /),  vardims );
@@ -121,7 +123,11 @@ begin
    fileattdef( ncout, ncin );
    date = systemfunc( "date" );
    desc = "Regrid using regrid_GLCMEC_n_PFT.ncl from: "+infilename;
-   ncout@history = date + " : " + desc + str_get_nl() + ncin@history;
+   history = ""
+   if ( isvar(ncin@history) )then
+      history = ncin@history;
+   end if
+   ncout@history = date + " : " + desc + str_get_nl() + history;
    ;
    ; Set static variables
    ;
@@ -143,14 +149,22 @@ begin
       vardims = getfilevardims( ncin, vars(i) );
       ; Regrid variables with lat or lon dimensions
       if ( (any(vardims .eq. "lat") ) .or. (any(vardims .eq. "lon")) )then
-         if ( (vars(i) .ne. "LAT") .and. (vars(i) .ne. "LON") .and. (vars(i) .ne. "LANDMASK") .and. (vars(i) .ne. "LATIXY") .and. (vars(i) .ne. "LONGXY") )then
+         if ( (str_upper(vars(i)) .ne. "LAT") .and. (str_upper(vars(i)) .ne. "LON") .and. (vars(i) .ne. "LANDMASK") .and. (vars(i) .ne. "LATIXY") .and. (vars(i) .ne. "LONGXY") )then
             print( "Regrid "+vars(i) );
-            ncout->$vars(i)$ = area_conserve_remap ( ncin->LON, ncin->LAT, ncin->$vars(i)$, outlon, outlat, False );
+            tmp = (/ ncin->$vars(i)$ /)
+            if ( dimsizes(ncin->LON) .ge. 7200 )then
+               tmp2 = area_hi2lores ( ncin->LON, ncin->LAT, tmp, False, 1.0d00, outlon, outlat, False );
+            else
+               tmp2 = area_conserve_remap ( ncin->LON, ncin->LAT, tmp, outlon, outlat, False );
+            end if
+            delete( tmp  );
             print( "after regrid" );
             if ( vars(i) .eq. "PCT_NAT_PFT" )then
                print( "Make sure PCT_NAT_PFT still sums to 100.0" );
-               ncout->$vars(i)$ = NormalizeTo100_( ncout->$vars(i)$ );
+               tmp2 = NormalizeTo100_( tmp2 );
             end if
+            ncout->$vars(i)$ = tmp2;
+            delete( tmp2 );
          end if
       ; Otherwise just copy
       else
@@ -171,12 +185,15 @@ begin
    ;
    glacierfile = "$DIN_LOC_ROOT/lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000.c120926.nc"
    pftfile     = "$DIN_LOC_ROOT/lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.simyrPtVg.c181106/mksrf_landuse_potvegclm50_LUH2.c181106.nc"
-   gridfile    = "$DIN_LOC_ROOT/lnd/clm2/rawdata/mksrf_lanwat.050425.nc"
+   lakfile     = "$DIN_LOC_ROOT/lnd/clm2/rawdata/mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc"
+   gridfile    = "$DIN_LOC_ROOT//lnd/clm2/rawdata/mksrf_lanwat.050425.nc"
 
    print( "Open: "+glacierfile );
    ncglc = addfile( glacierfile, "r" );
    print( "Open: "+pftfile );
    ncpft = addfile( pftfile, "r" );
+   print( "Open: "+lakfile );
+   nclak = addfile( lakfile, "r" );
    print( "Open: "+gridfile );
    ncgrd = addfile( gridfile, "r" );
    ;
@@ -186,6 +203,7 @@ begin
 
    outglacierfile = "mksrf_glacier_0.5x0.5_simyr2000.c"+sdate+".nc";
    outpftfile     = "mksrf_landuse_0.5x0.5_potvegclm50_LUH2.c"+sdate+".nc";
+   outlakfile     = "mksrf_LakePnDepth_0.5x0.5_simyr2004_csp1k.c"+sdate+".nc";
 
    print( "Open : "+outglacierfile );
    if ( systemfunc("test -f "+outglacierfile+"; echo $?" ) .eq. 0 )then
@@ -197,11 +215,24 @@ begin
       system( "/bin/rm "+outpftfile );
    end if
    nco_pft = addfile( outpftfile, "c" );
+   print( "Open : "+outlakfile );
+   if ( systemfunc("test -f "+outlakfile+"; echo $?" ) .eq. 0 )then
+      system( "/bin/rm "+outlakfile );
+   end if
+   nco_lak = addfile( outlakfile, "c" );
    ;
    ; Duplicate the file on the new grid
    ;
    duplicate_file4newgrid ( glacierfile, outglacierfile, ncglc, nco_glc, ncgrd );
+   delete( nco_glc );
+   delete( ncglc );
    duplicate_file4newgrid ( pftfile,     outpftfile,     ncpft, nco_pft, ncgrd );
+   delete( nco_pft );
+   delete( ncpft );
+   duplicate_file4newgrid ( lakfile,     outlakfile,     nclak, nco_lak, ncgrd );
+   delete( nco_lak );
+   delete( nclak );
+   delete( ncgrd );
 
    print( "" );
    print( "Successfully regrid files" );
