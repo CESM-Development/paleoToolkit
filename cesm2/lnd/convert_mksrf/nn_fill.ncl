@@ -20,7 +20,7 @@ begin
   input  = "$DIN_LOC_ROOT"
 
   finglc = "mksrf_glacier_lgm21ka.example"
-  finlan = "mksrf_lanwat_lgm21ka.example"
+  finlan = "mksrf_lanwatnDepth_lgm21ka.example.nc"
   finpft = "mksrf_pft_lgm21ka.example"
 
   ifile1 = path+finglc+".nc"
