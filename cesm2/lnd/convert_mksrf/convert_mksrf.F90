@@ -58,6 +58,7 @@ program convert_mksrf
   real(r8) :: plandmask(nlon,nlat)        !land mask
   real(r8) :: lgmlandmask(nlon,nlat)      !lgmland mask
   real(r8) :: pct_lake(nlon,nlat)         !pct lake
+  real(r8) :: lakedepth(nlon,nlat)        !lake depth
   real(r8) :: pct_wetland(nlon,nlat)      !pct wetland
   real(r8) :: bin_center(num_z)           !glacier elevation centers
   real(r8) :: bin_edge(num_z_edge)        !glacier elevation edges
@@ -92,6 +93,7 @@ program convert_mksrf
   integer :: pct_lake_id                  !pct_lake id
   integer :: pct_wetland_id               !pct_lake id
   integer :: pct_cft_id                   !percent crop type id
+  integer :: lak_dep_id                   !lake depth id
 
 
   integer :: i,j                          !indicis
@@ -111,13 +113,13 @@ program convert_mksrf
   integer :: icount                       !integer counter
 
 
-  character(len=256) :: filei, fileig, fileil, fileip !input filenames
+  character(len=256) :: filei, fileig, fileil, fileiw, fileip !input filenames
   character(len=256) :: fileog, fileol, fileop !output filenames
   character(len=256) :: name,unit            !netCDF attributes
 
   integer :: ierr                          ! error code for namelist read
 
-  namelist /convert_mksrf_in/ filei, fileig, fileip, fileil, fileog, fileop, fileol
+  namelist /convert_mksrf_in/ filei, fileig, fileip, fileiw, fileil, fileog, fileop, fileol
 
 !-----------------------------------------------------------------
   write(6,*) "Read in namelist"
@@ -205,11 +207,25 @@ program convert_mksrf
     call wrap_get_var8 (ncid, pct_lake_id, pct_lake)
 
 ! get id and var for lanwat
+    call wrap_inq_varid (ncid, 'LAKEDEPTH', lak_dep_id   )
+    call wrap_get_var8 (ncid, lak_dep_id, lakedepth)
+
+  else
+    write(6,*)'cannot open lake file successfully'
+    call endrun
+  endif
+  ret = nf_close (ncid)
+
+  write(6,*) "Open: ", fileiw
+  ret = nf_open (fileiw, nf_nowrite, ncid)
+  if (ret == nf_noerr) then
+
+! get id and var for lanwat
     call wrap_inq_varid (ncid, 'PCT_WETLAND', pct_wetland_id   )
     call wrap_get_var8 (ncid, pct_wetland_id, pct_wetland)
 
   else
-    write(6,*)'cannot open lanwat file successfully'
+    write(6,*)'cannot open wetland file successfully'
     call endrun
   endif
   ret = nf_close (ncid)
@@ -703,6 +719,14 @@ program convert_mksrf
   call wrap_put_att_text (ncid, pct_lake_id, 'long_name', name)
   call wrap_put_att_text (ncid, pct_lake_id, 'units'    , unit)
 
+  name = 'Lake Depth (default = 10m)'
+  unit = 'm'
+  dim2_id(1) = lon_id
+  dim2_id(2) = lat_id
+  call wrap_def_var (ncid ,'LAKEDEPTH' ,nf_float, 2, dim2_id, lak_dep_id)
+  call wrap_put_att_text (ncid, lak_dep_id, 'long_name', name)
+  call wrap_put_att_text (ncid, lak_dep_id, 'units'    , unit)
+
   name = 'percent wetland'
   unit = 'unitless'
   dim2_id(1) = lon_id
@@ -732,6 +756,7 @@ program convert_mksrf
   call wrap_put_var_realx (ncid, edges_id      , edge(3))
   call wrap_put_var_realx (ncid, edgew_id      , edge(4))
   call wrap_put_var_realx (ncid, pct_lake_id, pct_lake)
+  call wrap_put_var_realx (ncid, lak_dep_id, lakedepth)
   call wrap_put_var_realx (ncid, pct_wetland_id, pct_wetland)
   call wrap_put_var_realx (ncid, landmask_id   , landmask)
 

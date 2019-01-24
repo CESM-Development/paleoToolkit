@@ -5,9 +5,10 @@
   filei  = '../../../cesm1/lnd/convert_mksrf/topo/topo-ice.05.lgm21ka.example.nc'
   fileig = 'mksrf_glacier_0.5x0.5_simyr2000.c190118.nc'
   fileip = 'mksrf_landuse_0.5x0.5_potvegclm50_LUH2.c190118.nc'
-  fileil = '/gpfs/fs1/p/cesmdata/cseg/inputdata/lnd/clm2/rawdata/mksrf_lanwat.050425.nc'
+  fileiw = '/gpfs/fs1/p/cesmdata/cseg/inputdata/lnd/clm2/rawdata/mksrf_lanwat.050425.nc'
+  fileil = 'mksrf_LakePnDepth_0.5x0.5_simyr2004_csp1k.c190123.nc'
   fileog = 'mksrf_glacier_lgm21ka.example.nc'
   fileop = 'mksrf_pft_lgm21ka.example.nc'
-  fileol = 'mksrf_lanwat_lgm21ka.example.nc'
+  fileol = 'mksrf_lanwatnDepth_lgm21ka.example.nc'
   !-----------------------------------------------------------------
 /
