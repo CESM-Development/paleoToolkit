@@ -744,6 +744,10 @@ end if		; do map units look
 
   ; copy variables
   if (.not.all(ismissing(in8_vars))) then
+        o8->LATIXY = in3->LATIXY;
+        o8->LONGXY = in3->LONGXY;
+        o8->pft    = in8->pft;
+        o8->time   = in8->time;
         do i = 0, dimsizes(in8_vars) - 1
                 usevar = in8_vars(i)
                 print("i = " + i + " in8vars = " + in8_vars(i))
