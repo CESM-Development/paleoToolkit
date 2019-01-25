@@ -4,7 +4,7 @@
 #
 #SBATCH -J regridding
 #SBATCH -n 1
-#SBATCH -t 03:00:00
+#SBATCH -t 00:30:00
 #SBATCH -A P93300606
 #SBATCH -p dav
 #SBATCH --mem=8G

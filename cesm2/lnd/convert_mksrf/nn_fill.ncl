@@ -168,7 +168,7 @@ begin
   ; fill in 0 and 359
 
   ; New land points
-doThis = 1
+doThis = 0
 if (doThis .eq. 1) then
   do i=minlat,maxlat  				; lat
   do j=minlon,maxlon                            ; lon
