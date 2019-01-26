@@ -96,7 +96,7 @@ program convert_mksrf
   integer :: lak_dep_id                   !lake depth id
 
 
-  integer :: i,j                          !indicis
+  integer :: i,j,k                        !indices
   integer :: ndatai =  1                  !input unit
   integer :: ndatat  = 2                  !input unit
   integer :: ncid                         !netCDF file id
@@ -304,6 +304,14 @@ program convert_mksrf
    do i = 1,nlon
     if (ice(i,j)==100) then
               pct_glacier(i,j) = 100._r8
+              ! Find vertical index of where topography is at
+              do k = 1, num_z
+                 if ( (top(i,j) .gt. bin_edge(k)) .and. (top(i,j) .lt. bin_edge(k+1)) )then
+                    exit
+                 end if
+              end do
+              pct_glc_ice(i,j,k) = 100._r8
+              pct_glc_gic(i,j,k) = 0._r8
               pct_crop(i,j)      = 0._r8
               pct_nat_veg(i,j)   = 100._r8
               pct_nat_pft(i,j,0)  = 100._r8
