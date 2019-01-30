@@ -61,6 +61,8 @@ program convert_mksrf
   real(r8) :: lakedepth(nlon,nlat)        !lake depth
   real(r8) :: pct_wetland(nlon,nlat)      !pct wetland
   real(r8) :: bin_center(num_z)           !glacier elevation centers
+  real(r8) :: center_sum(num_z)           !glacier elevation weighted sum
+  real(r8) :: elev_weight(num_z)          !sum of elevation weighted by ice fraction
   real(r8) :: bin_edge(num_z_edge)        !glacier elevation edges
 
 
@@ -167,6 +169,12 @@ program convert_mksrf
     call wrap_get_var8 (ncid, bin_center_id,  bin_center)
     call wrap_inq_varid (ncid, 'BIN_EDGES',   bin_edge_id   )
     call wrap_get_var8 (ncid, bin_edge_id,    bin_edge)
+    ! Use the settings for ice from the input ice file, so reset these
+    pct_glacier = 0.0_r8
+    pct_glc_ice = 0.0_r8
+    pct_glc_gic = 0.0_r8
+    center_sum  = 0.0_r8
+    elev_weight = 0.0_r8
 
   else
     write(6,*)'cannot open glacier file successfully'
@@ -302,21 +310,22 @@ program convert_mksrf
 
   do j = 1,nlat
    do i = 1,nlon
-    if (ice(i,j)==100) then
-              pct_glacier(i,j) = 100._r8
+    if (ice(i,j)==100.0_r8) then
+              pct_glacier(i,j) = ice(i,j)
               ! Find vertical index of where topography is at
               do k = 1, num_z
-                 if ( (top(i,j) .gt. bin_edge(k)) .and. (top(i,j) .lt. bin_edge(k+1)) )then
+                 if ( (top(i,j) .ge. bin_edge(k)) .and. (top(i,j) .lt. bin_edge(k+1)) )then
+                    center_sum(k)  = center_sum(k) + top(i,j)*ice(i,j)
+                    elev_weight(k) = elev_weight(k) + ice(i,j)
                     exit
                  end if
               end do
-              pct_glc_ice(i,j,k) = 100._r8
-              pct_glc_gic(i,j,k) = 0._r8
+              pct_glc_ice(i,j,k) = ice(i,j)
               pct_crop(i,j)      = 0._r8
-              pct_nat_veg(i,j)   = 100._r8
-              pct_nat_pft(i,j,0)  = 100._r8
+              pct_nat_veg(i,j)   = 0._r8
+              pct_nat_pft(i,j,0)  = 0._r8
               pct_nat_pft(i,j,1:) = 0._r8
-              pct_cft(i,j,1)     = 100._r8
+              pct_cft(i,j,1)     = 0._r8
               pct_cft(i,j,2:)    = 0._r8
               pct_lake(i,j)    =  0._r8
               pct_wetland(i,j) =  0._r8
@@ -348,10 +357,25 @@ program convert_mksrf
               pct_cft(i,j,1)     = 100._r8
               pct_cft(i,j,2:)    = 0._r8
      end if
+     !
+     ! Check that PFT's sum to 100
+     !
+     if ( (pct_nat_veg(i,j) > 0.0_r8) .and. (abs(sum(pct_nat_pft(i,j,:)) - 100.0_r8) .gt. 1.e-12_r8) )then
+         write(6,*)"nat PFT's do NOT sum to 100: ", i, j, sum(pct_nat_pft(i,j,:))
+         print *,' ---------------------------------------'
+         call endrun
+     end if
    enddo
   enddo
   print *,maxval(pct_glacier)
   print *,'pct_nat_pft data created '
+
+  ! Find bin centers
+  do k = 1, num_z
+    if ( elev_weight(k) > 0.0_r8 )then
+       bin_center(k) = center_sum(k) / elev_weight(k)
+    end if
+  end do
 
 ! nanr 30sep10 - commented out b/c using 05deg lanwat mask
 ! jcount=0
@@ -452,7 +476,7 @@ program convert_mksrf
   unit = 'unitless'
   dim2_id(1) = dimlon_id
   dim2_id(2) = dimlat_id
-  call wrap_def_var (ncid ,'PCT_GLACIER' ,nf_float, 2, dim2_id, pct_glacier_id)
+  call wrap_def_var (ncid ,'PCT_GLACIER' ,nf_double, 2, dim2_id, pct_glacier_id)
   call wrap_put_att_text (ncid, pct_glacier_id, 'long_name', name)
   call wrap_put_att_text (ncid, pct_glacier_id, 'units'    , unit)
   name = 'percent glacier/ice cap coverage'
@@ -460,7 +484,7 @@ program convert_mksrf
   dim3_id(1) = dimlon_id
   dim3_id(2) = dimlat_id
   dim3_id(3) = dimz_id
-  call wrap_def_var (ncid ,'PCT_GLC_GIC' ,nf_float, 3, dim3_id, pct_glc_gic_id)
+  call wrap_def_var (ncid ,'PCT_GLC_GIC' ,nf_double, 3, dim3_id, pct_glc_gic_id)
   call wrap_put_att_text (ncid, pct_glc_gic_id, 'long_name', name)
   call wrap_put_att_text (ncid, pct_glc_gic_id, 'units'    , unit)
   name = 'percent glacier icesheet coverage'
@@ -468,7 +492,7 @@ program convert_mksrf
   dim3_id(1) = dimlon_id
   dim3_id(2) = dimlat_id
   dim3_id(3) = dimz_id
-  call wrap_def_var (ncid ,'PCT_GLC_ICESHEET' ,nf_float, 3, dim3_id, pct_glc_ice_id)
+  call wrap_def_var (ncid ,'PCT_GLC_ICESHEET' ,nf_double, 3, dim3_id, pct_glc_ice_id)
   call wrap_put_att_text (ncid, pct_glc_ice_id, 'long_name', name)
   call wrap_put_att_text (ncid, pct_glc_ice_id, 'units'    , unit)
   name = 'Elevation centers'
@@ -596,23 +620,23 @@ program convert_mksrf
   name = 'percent pft'
   unit = 'unitless'
   dim3_id(3) = dimpft_id
-  call wrap_def_var (ncid2,'PCT_NAT_PFT' ,nf_float, 3, dim3_id, pct_pft_id)
+  call wrap_def_var (ncid2,'PCT_NAT_PFT' ,nf_double, 3, dim3_id, pct_pft_id)
   call wrap_put_att_text (ncid2, pct_pft_id, 'long_name', name)
   call wrap_put_att_text (ncid2, pct_pft_id, 'units'    , unit)
   name = 'percent cft'
   unit = 'unitless'
   dim3_id(3) = dimcft_id
-  call wrap_def_var (ncid2,'PCT_CFT' ,nf_float, 3, dim3_id, pct_cft_id)
+  call wrap_def_var (ncid2,'PCT_CFT' ,nf_double, 3, dim3_id, pct_cft_id)
   call wrap_put_att_text (ncid2, pct_cft_id, 'long_name', name)
   call wrap_put_att_text (ncid2, pct_cft_id, 'units'    , unit)
   name = 'percent total crop'
   unit = 'unitless'
-  call wrap_def_var (ncid2,'PCT_CROP' ,nf_float, 2, dim2_id, pct_crop_id)
+  call wrap_def_var (ncid2,'PCT_CROP' ,nf_double, 2, dim2_id, pct_crop_id)
   call wrap_put_att_text (ncid2, pct_crop_id, 'long_name', name)
   call wrap_put_att_text (ncid2, pct_crop_id, 'units'    , unit)
   name = 'percent total natural vegetation'
   unit = 'unitless'
-  call wrap_def_var (ncid2,'PCT_NATVEG' ,nf_float, 2, dim2_id, pct_nat_veg_id)
+  call wrap_def_var (ncid2,'PCT_NATVEG' ,nf_double, 2, dim2_id, pct_nat_veg_id)
   call wrap_put_att_text (ncid2, pct_nat_veg_id, 'long_name', name)
   call wrap_put_att_text (ncid2, pct_nat_veg_id, 'units'    , unit)
 
@@ -739,7 +763,7 @@ program convert_mksrf
   unit = 'unitless'
   dim2_id(1) = lon_id
   dim2_id(2) = lat_id
-  call wrap_def_var (ncid ,'PCT_WETLAND' ,nf_float, 2, dim2_id, pct_wetland_id)
+  call wrap_def_var (ncid ,'PCT_WETLAND' ,nf_double, 2, dim2_id, pct_wetland_id)
   call wrap_put_att_text (ncid, pct_wetland_id, 'long_name', name)
   call wrap_put_att_text (ncid, pct_wetland_id, 'units'    , unit)
 

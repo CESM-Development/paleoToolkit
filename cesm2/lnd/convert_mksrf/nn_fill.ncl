@@ -19,9 +19,9 @@ begin
   path   = "./"
   input  = "$DIN_LOC_ROOT"
 
-  finglc = "mksrf_glacier_lgm21ka.example"
+  finglc = "mksrf_glacier_lgm21ka.example.nc"
   finlan = "mksrf_lanwatnDepth_lgm21ka.example.nc"
-  finpft = "mksrf_pft_lgm21ka.example"
+  finpft = "mksrf_pft_lgm21ka.example.nc"
 
   ifile1 = path+finglc+".nc"
   ifile2 = path+finlan+".nc"
@@ -181,18 +181,18 @@ if (doThis .eq. 1) then
 	assigned = 0
 
 	; assign bareground under new glaciers
-       	if (pctgla(i,j) .eq. 100) then
-        	soic2d(i,j)  	 = 15
+       	if (pctgla(i,j) .eq. 100.d00) then
+        	soic2d(i,j)  	 = 15.
 		fmax(i,j)    	 = 0.365241	; constant over glaciers
-                pctwet(i,j)      = 0.
+                pctwet(i,j)      = 0.d00
                 pctlak(i,j)      = 0.
                 organic3d(:,i,j) = 0.
-                npctpft(0,i,j)    = 100.		; bareground under new glaciers
-                npctpft(1:numpft-1,i,j) = 0.
-                hbot(:,:,i,j)    = 0.
-                htop(:,:,i,j)    = 0.
-                lai( :,:,i,j)    = 0.
-                sai( :,:,i,j)    = 0.
+                npctpft(0,i,j)    = 100.d00		; bareground under new glaciers
+                npctpft(1:numpft-1,i,j) = 0.d00
+                hbot(:,:,i,j)    = 0.d00
+                htop(:,:,i,j)    = 0.d00
+                lai( :,:,i,j)    = 0.d00
+                sai( :,:,i,j)    = 0.d00
 		assigned = 1
  	end if
     end if
@@ -226,46 +226,46 @@ end if		; doThis loop
     if(pdmaskfill(i,j) .eq. 0 .and. newmask(i,j) .eq. 1) then
 
 	fmax(i,j) = 0.365241
-       	if (pctgla(i,j) .eq. 100) then
+       	if (pctgla(i,j) .eq. 100.d00) then
                 print( "Fill: i="+i+" j="+j );
-                soic2d(i,j)      = 15
-                pctwet(i,j)      = 0.
+                soic2d(i,j)      = 15.
+                pctwet(i,j)      = 0.d00
                 pctlak(i,j)      = 0.
                 organic3d(:,i,j) = 0.
-                npctpft(0,i,j)    = 100.
-                npctpft(1:numpft-1,i,j) = 0.
-                hbot(:,:,i,j)    = 0.
-                htop(:,:,i,j)    = 0.
-                lai( :,:,i,j)    = 0.
-                sai( :,:,i,j)    = 0.
+                npctpft(0,i,j)    = 100.d00
+                npctpft(1:numpft-1,i,j) = 0.d00
+                hbot(:,:,i,j)    = 0.d00
+                htop(:,:,i,j)    = 0.d00
+                lai( :,:,i,j)    = 0.d00
+                sai( :,:,i,j)    = 0.d00
 		found = 1
 	else 
   	     noluck = 0
   	     found = 0
              ; look west
 
-             if (pdmaskfill(i,j-1) .eq. 1 .and. npctpft(0,i,j-1) .ne. 100.) then
+             if (pdmaskfill(i,j-1) .eq. 1 .and. npctpft(0,i,j-1) .ne. 100.d00) then
                 usei = i
                 usej = j-1
                 found = 1
 		print("found cell to west i,j, usei, usej = " + i + " " + j + " " + usei + " " + usej)
              else 
 		; look east
-		if (pdmaskfill(i,j+1) .eq. 1 .and. npctpft(0,i,j+1) .ne. 100.) then
+		if (pdmaskfill(i,j+1) .eq. 1 .and. npctpft(0,i,j+1) .ne. 100.d00) then
                    usei = i
                    usej = j+1
                    found = 1
 		   print("found cell to east i,j,usei,usej = " + i + " " + j + " " + usei + " " + usej)
                 else 
 		   ; look north
-		   if (pdmaskfill(i+1,j) .eq. 1 .and. npctpft(0,i+1,j) .ne. 100.) then
+		   if (pdmaskfill(i+1,j) .eq. 1 .and. npctpft(0,i+1,j) .ne. 100.d00) then
                 	usei = i+1
                 	usej = j
                 	found = 1
 		   	print("found cell to North i,j,usei,usej = " + i + " " + j + " " + usei + " " + usej)
              	   else 
 			; look south
-			if (pdmaskfill(i-1,j) .eq. 1 .and. npctpft(0,i-1,j) .ne. 100.) then
+			if (pdmaskfill(i-1,j) .eq. 1 .and. npctpft(0,i-1,j) .ne. 100.d00) then
                 		usei = i-1
                 		usej = j
                 		found = 1
@@ -280,28 +280,28 @@ end if		; doThis loop
              end if
              if (noluck .eq. 1) then
 		print("Cell will remain bareground, i,j " + i + " " + j)
-                soic2d(i,j)      = 15
-                pctwet(i,j)      = 0.
+                soic2d(i,j)      = 15.
+                pctwet(i,j)      = 0.d00
                 pctlak(i,j)      = 0.
                 organic3d(:,i,j) = 0.
-                hbot(:,:,i,j)    = 0.
-                htop(:,:,i,j)    = 0.
-                lai( :,:,i,j)    = 0.
-                sai( :,:,i,j)    = 0.
+                hbot(:,:,i,j)    = 0.d00
+                htop(:,:,i,j)    = 0.d00
+                lai( :,:,i,j)    = 0.d00
+                sai( :,:,i,j)    = 0.d00
 		pdmaskfill(i,j)      = 1.
 		soicmask(i,j)    = 1.
              else 
 		if (found  .eq. 1) then
                 	; assign new cell
-			pdmaskfill(i,j) = 1
-			if (pctgla(usei,usej) .eq. 100.) then
-                		npctpft(0,i,j) = 100.
-                		npctpft(1:numpft-1,i,j) = 0.
-                		pctgla(i,j)   = 100.
-                		hbot(:,:,i,j) = 0.
-                		htop(:,:,i,j) = 0.
-                		lai( :,:,i,j) = 0.
-                		sai( :,:,i,j) = 0.
+			pdmaskfill(i,j) = 1.
+			if (pctgla(usei,usej) .eq. 100.d00) then
+                		npctpft(0,i,j) = 100.d00
+                		npctpft(1:numpft-1,i,j) = 0.d00
+                		pctgla(i,j)   = 100.d00
+                		hbot(:,:,i,j) = 0.d00
+                		htop(:,:,i,j) = 0.d00
+                		lai( :,:,i,j) = 0.d00
+                		sai( :,:,i,j) = 0.d00
 			end if
                 	soic2d(i,j)   = soic2d(usei,usej)
 			fmax(i,j)     = fmax(usei,usej)
@@ -333,39 +333,39 @@ end if		; doThis loop
 
 	      delete(sumpft)
 
-	      sumpft = 0.
+	      sumpft = 0.d00
               do m = 0, numpft-1
                           sumpft = sumpft + npctpft(m,i,j)
               end do
 	      
-              ddiff = 100 - sumpft
-              if (sumpft .ne. 100) then
+              ddiff = 100.d00 - sumpft
+              if (sumpft .ne. 100.d00) then
 			
 			print("sumpft = "+sumpft + " for cell " + i + " " +j)
 			; zero cell is set to bareground
-			if (sumpft .eq. 0) then
+			if (sumpft .eq. 0.0d00) then
 				pctlak(i,j) = 0.
-				pctwet(i,j) = 0.
-				pctgla(i,j) = 0.
-				npctpft(0,i,j) = 100.
-				npctpft(1:numpft-1,i,j) = 0.
+				pctwet(i,j) = 0.d00
+				pctgla(i,j) = 0.d00
+				npctpft(0,i,j) = 100.d00
+				npctpft(1:numpft-1,i,j) = 0.d00
 			else 
 			     ; partially glaciated cell is set to part bareground, part glacier
 			     ; add any missing ground to bareground
-			     if (pctgla(i,j) .eq. 0. .and. sumpft .lt. 100.) then
+			     if (pctgla(i,j) .eq. 0.d00 .and. sumpft .lt. 100.d00) then
 				oldbare = npctpft(0,i,j)
-			   	npctpft(0,i,j)  = oldbare + 100.-sumpft
+			   	npctpft(0,i,j)  = oldbare + 100.d00-sumpft
 			     else
 			        ; bareground is adjusted
-			     	if (ddiff .gt. 0.) then
-			   		npctpft(0,i,j)  = npctpft(0,i,j) + 100.-sumpft
+			     	if (ddiff .gt. 0.d00) then
+			   		npctpft(0,i,j)  = npctpft(0,i,j) + 100.d00-sumpft
 				else
-			   		npctpft(0,i,j)  = npctpft(0,i,j) - 100.-sumpft
+			   		npctpft(0,i,j)  = npctpft(0,i,j) - 100.d00-sumpft
 	      		     	end if
 	      		     end if
                         end if
 			; check again
-              		sumpft = 0.
+              		sumpft = 0.d00
               		do m = 0, numpft-1
                              sumpft = sumpft + npctpft(m,i,j)
               		end do
@@ -376,23 +376,23 @@ end if		; doThis loop
     end if 		; matching landmask / nn loop
         ; check all pfts
         sumpft = sum(npctpft(:,i,j))
-        if(newmask(i,j) .eq. 1. .and. pctgla(i,j) .gt. 0. .and.  sumpft .ne. 100. ) then    ;this solves problem for land points with 0<pctgla<100
-              npctpft(0,i,j) = 100.
-              npctpft(1:numpft-1,i,j) = 0.
+        if(newmask(i,j) .eq. 1.d00 .and. pctgla(i,j) .gt. 0.d00 .and.  sumpft .ne. 100.d00 ) then    ;this solves problem for land points with 0<pctgla<100
+              npctpft(0,i,j) = 100.d00
+              npctpft(1:numpft-1,i,j) = 0.d00
               sumpft = sum(npctpft(:,i,j))
-        else if(newmask(i,j) .eq. 1. .and. pctgla(i,j) .eq. 0. .and.  sumpft .ne. 100. ) then    ;this solves problem for land points with pctgla=0
-              npctpft(0,i,j) = 100.
-              npctpft(1:numpft-1,i,j) = 0.
+        else if(newmask(i,j) .eq. 1.d00 .and. pctgla(i,j) .eq. 0.d00 .and.  sumpft .ne. 100.d00 ) then    ;this solves problem for land points with pctgla=0
+              npctpft(0,i,j) = 100.d00
+              npctpft(1:numpft-1,i,j) = 0.d00
               sumpft = sum(npctpft(:,i,j))
         end if
         end if
-        if (sumpft .ne. 100.0 .and. newmask(i,j) .eq. 1) then
-		sumpft = 0.
-		osumpft = 0.
+        if (sumpft .ne. 100.0d00 .and. newmask(i,j) .eq. 1) then
+		sumpft = 0.d00
+		osumpft = 0.d00
                 m = numpft-1
                 sumpft  = dim_sum_n(npctpft(m,i,j),0)
                 osumpft = dim_sum_n(opctpft(m,i,j),0)
-		if (sumpft .ne. 100.) then
+		if (sumpft .ne. 100.d00) then
                 	print("Exit WARNING sumpft was ne 100 : " + i + " " + j + " corrected sum=  " + sumpft )
                 	print("Exit WARNING sumpft was ne 100 : " + i + " " + j + " old sum=  " + osumpft )
 			print(" ------------ ")

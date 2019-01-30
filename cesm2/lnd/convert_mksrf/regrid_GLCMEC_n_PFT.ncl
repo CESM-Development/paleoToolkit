@@ -6,14 +6,25 @@ function NormalizeTo100_ ( array[*][*][*]:numeric )
 ;
 ; Normalize the incoming array to 100
 ;
-local temp, i, j, sumarray;
+local temp, diff, i, j, sumarray;
 begin
    temp = array;
    do i = 0, dimsizes(array(0,:,0))-1
    do j = 0, dimsizes(array(0,0,:))-1
        sumarray = sum(array(:,i,j));
-       if ( (sumarray .gt. 0.0d00) .and. (abs(sumarray - 100.0) .gt. 1.d-8) )then
+       if ( sumarray .gt. 0.0d00 )then
           temp(:,i,j) = temp(:,i,j)*100.0d00 / sumarray
+          diff = sum(temp(:,i,j)) - 100.0d00
+          if ( abs(diff) .gt. 0.0d00 )then
+             temp(0,i,j) = temp(0,i,j) - diff
+             diff = sum(temp(:,i,j)) - 100.0d00
+             if ( abs(diff) .gt. 1.d-13 )then
+                print( "PCT PFT does not sum to 100.0: "+sum(temp(:,i,j)) );
+                print( "Difference: "+diff );
+                print( temp(:,i,j) );
+                exit();
+             end if
+          end if
        end if
    end do
    end do
