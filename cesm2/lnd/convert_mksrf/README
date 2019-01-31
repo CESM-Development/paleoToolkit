@@ -38,3 +38,6 @@ or
 6.) Run mksurfdata_map with the datasets you created and the mapping files that go with them
 
 
+use the example namelist: (example namelist works with CTSM release-clm5.0.16)
+
+surfdata_0.9x1.25_hist_16pfts_nourb_CMIP6_simyr21ka_example.namelist
