@@ -4,6 +4,9 @@
 *.o
 *.obj
 
+# VIM Swap files:
+*.swp
+
 #subversion
 .svn
 
@@ -26,6 +29,17 @@
 *.lib
 
 # Executables
+cesm?/lnd/convert_mksrf/convert_mksrf
+cesm?/lnd/paleo_mkraw/paleo_mkraw_cesm?
 *.exe
 *.out
 *.app
+
+
+# Created NetCDF files
+cesm?/lnd/convert_mksrf/*.nc
+cesm?/lnd/paleo_mkraw_cesm?/*.nc
+
+
+# Unzipped files under the topo directory
+cesm?/lnd/convert_mksrf/topo/*.nc

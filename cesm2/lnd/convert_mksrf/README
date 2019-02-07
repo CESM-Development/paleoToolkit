@@ -1,0 +1,43 @@
+Process to follow:
+
+1.) Unzip the glacier topo file you will need (or get your own data)
+
+For example:
+
+ gunzip ../../../cesm1/lnd/convert_mksrf/topo/topo-ice.05.lgm21ka.example.nc.gz
+
+2.) Set environment variable DIN_LOC_ROOT to location of CESM2 inputdata
+
+setenv DIN_LOC_ROOT /glade/p/cesm/cseg/inputdata
+
+This path will be used in the NCL scripts
+
+2.) Regrid glacier and PFT data to a half degree grid
+
+IMPORTANT NOTE: HAS TO BE DONE ON A LARGE MEMORY MACHINE!
+
+This step also takes several hours of compute time.
+
+ sbatch runregrid.csh
+
+or
+
+ ncl regrid_GLCMEC_n_PFT.ncl
+
+3.) Run convert_mksrf to convert Glacier, Land-water, and PFT datasets
+
+  See README.convert_mksrf
+
+4.) Edit nn_fill.ncl to point to your files
+
+5.) Run nn_fill.ncl to create new datasets needed by CESM2/components/lnd/tools/mksurfdata_map
+
+
+ ncl nn_fill.ncl
+
+6.) Run mksurfdata_map with the datasets you created and the mapping files that go with them
+
+
+use the example namelist: (example namelist works with CTSM release-clm5.0.16)
+
+surfdata_0.9x1.25_hist_16pfts_nourb_CMIP6_simyr21ka_example.namelist

@@ -1,0 +1,31 @@
+#-----------------------------------------------------------------------
+# This Makefile is for building any of the executables in this directory.
+# USAGE: eg. gmake EXENAME=paleo_mkraw
+#------------------------------------------------------------------------
+
+EXEDIR = .
+EXENAME = convert_mksrf
+RM = rm
+
+.SUFFIXES:
+.SUFFIXES: .f90 .F90 .o
+
+FC         = ifort
+FFLAGS     =  -assume bytere -CB -O0 -g -traceback -FR
+LIB_NETCDF = -L/glade/apps/opt/netcdf/4.2/intel/default/lib -lnetcdf
+INC_NETCDF = -I/glade/apps/opt/netcdf/4.2/intel/default/include
+
+TARGETS = convert_mksrf
+
+all: $(TARGETS)
+
+## OBJS := convert_mksrf.o
+## $(EXEDIR)/$(EXENAME): $(OBJS)
+
+convert_mksrf :  convert_mksrf.F90
+	$(FC) $(FFLAGS) -o convert_mksrf convert_mksrf.F90 $(INC_NETCDF) $(LIB_NETCDF)
+
+clean:
+	$(RM) -f $(OBJS)  *.mod $(EXEDIR)/$(EXENAME)
+
+convert_mksrf.o : convert_mksrf.F90

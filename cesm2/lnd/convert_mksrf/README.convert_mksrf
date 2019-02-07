@@ -1,0 +1,22 @@
+To compile and run convert_mksrf code:
+machine:  nwsc (cheyenne)
+src:  convert_mksrf.F90
+
+2)  edit convert_mksrf.namelist
+        &convert_mksrf_in
+	!-----------------------------------------------------------------
+	!! point to your files
+	!-----------------------------------------------------------------
+  	filei  = '/location_to_topography_and_ice/public/topo/topo-ice.0.5degree.myrun.nc'
+        fileig = 'mksrf_glacier_0.5x0.5_simyr2000.cYYMMDD.nc'                    ! regridded glacier data (on half degree grid)
+        fileip = 'mksrf_landuse_0.5x0.5_potvegclm50_LUH2.cYYMMDD.nc'             ! regridded PFT data (on half degree grid)
+  	fileil = '/location_to_cesm_inputdata/lnd/clm2/rawdata/mksrf_lanwat.050425.nc' ! (on half degree grid)
+  	fileog = 'mksrf_glacier_lgm21ka.110106.nc'
+  	fileop = 'mksrf_pft_lgm21ka.110106.nc'
+  	fileol = 'mksrf_lanwat_lgm21ka.110106.nc'
+	!-----------------------------------------------------------------
+        /
+
+3)  gmake -f Makefile.nwsc
+5)  ./convert_mksrf < convert_mksrf.namelist
+
