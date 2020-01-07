@@ -1,0 +1,15 @@
+  &input_nml
+   gridtype     = 'rtm'
+   file_roff    = './fort.13_<casename>'
+   file_ocn     = './<SCRIP_mapping_file>'
+   file_nn      = 'map_r1x1<casename>_to_<ocnres>_nn_<date>.nc '
+   file_smooth  = 'map_r1x1<casename>_to_<ocnres>_sm_e1000r300_<date>.nc '
+   file_new     = 'map_r1x1<casename>_to_<ocnres>_nnsm_e1000r300_<date>.nc'
+   title        = 'runoff map: r1x1<casename> -> <ocnres>, nearest neighbor and smoothed '
+   eFold        = 1000000.0
+   rMax         =  300000.0
+   step1 = .true.
+   step2 = .true.
+   step3 = .true.
+
+  /

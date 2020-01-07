@@ -1,0 +1,2 @@
+varname,time_freq,model,experiment,ensemble,begdate,enddate,suffix,adj_name,calendar_type,begageBP,endageBP,agestep,begyrCE,nsimyrs
+tas,Aclim,CFSR,reanalysis,ana4mips,198101,201012,-clim,_cal_adj,noleap,-6000,-6000,1,1950,1

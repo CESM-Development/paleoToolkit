@@ -1,0 +1,11 @@
+#!/bin/csh -f
+#PBS -N adjust_hobart.run
+#PBS -q verylong
+#PBS -l select=1
+#PBS -l walltime=29:50:00
+#PBS -j oe
+#PBS -S /bin/csh -V
+
+setenv LD_LIBRARY_PATH /usr/local/lib:/usr/local/netcdf-c-4.6.1-f-4.4.4-gcc-g++-gfortran-4.8.5/lib
+
+/project/cseg/mvr/angular/PaleoCalAdjust/f90/projects/cal_adjust_PMIP/cal_adjust_PMIP

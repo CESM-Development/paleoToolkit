@@ -1,0 +1,7 @@
+activity,variable,time_freq,model,experiment,ensemble,grid_label,begdate,enddate,suffix,adj_name,calendar_type,begageBP,endageBP,agestep,begyrCE,nsimyrs,source_path,adjusted_path
+PMIP3,tas,Aclim,MPI-ESM-P,midHolocene,r1i1p1,,185001,194912,clim,_cal_adj,progreg,-6000,-6000,1,1850,1,"/Projects/Calendar/data/nc_files/Test_source/","/Projects/Calendar/data/nc_files/Test_adjusted/"
+PMIP3,tas,Amon,MPI-ESM-P,midHolocene,r1i1p1,,185001,194912,,_cal_adj,progreg,-6000,-6000,1,1850,100,"/Projects/Calendar/data/nc_files/Test_source/","/Projects/Calendar/data/nc_files/Test_adjusted/"
+PMIP3,tas,day,MPI-ESM-P,midHolocene,r1i1p1,,18500101,18591231,,_cal_adj,progreg,-6000,-6000,1,1850,10,"/Projects/Calendar/data/nc_files/Test_source/","/Projects/Calendar/data/nc_files/Test_adjusted/"
+PMIP3,sic,OImon,MPI-ESM-P,midHolocene,r1i1p1,,185001,194912,,_cal_adj,progreg,-6000,-6000,1,1850,100,"/Projects/Calendar/data/nc_files/Test_source/","/Projects/Calendar/data/nc_files/Test_adjusted/"
+PMIP3,msftmyz,Oclim,MPI-ESM-P,midHolocene,r1i1p1,,185001,194912,clim,_cal_adj,progreg,-6000,-6000,1,1850,1,"/Projects/Calendar/data/nc_files/Test_source/","/Projects/Calendar/data/nc_files/Test_adjusted/"
+PMIP3,ta,Amon,MPI-ESM-P,midHolocene,r1i1p1,,185001,194912,,_cal_adj,progreg,-6000,-6000,1,1850,100,"/Projects/Calendar/data/nc_files/Test_source/","/Projects/Calendar/data/nc_files/Test_adjusted/"

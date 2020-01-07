@@ -1,0 +1,7 @@
+activity,variable,time_freq,model,experiment,ensemble,grid_label,begdate,enddate,suffix,adj_name,calendar_type,begageBP,endageBP,agestep,begyrCE,nsimyrs,source_path,adjusted_path
+PMIP3,tas,Aclim,CCSM4,midHolocene,r1i1p1,,100001,130012,clim,_cal_adj,noleap,-6000,-6000,1,1000,1,"/Projects/Calendar/data/nc_files/Test_source/","/Projects/Calendar/data/nc_files/Test_adjusted/"
+PMIP3,tas,Amon,CCSM4,midHolocene,r1i1p1,,100001,130012,,_cal_adj,noleap,-6000,-6000,1,1000,100,"/Projects/Calendar/data/nc_files/Test_source/","/Projects/Calendar/data/nc_files/Test_adjusted/"
+PMIP3,tas,day,CCSM4,midHolocene,r1i1p1,,10000101,10491231,,_cal_adj,noleap,-6000,-6000,1,1000,50,"/Projects/Calendar/data/nc_files/Test_source/","/Projects/Calendar/data/nc_files/Test_adjusted/"
+PMIP3,sic,OImon,CCSM4,midHolocene,r1i1p1,,100001,130012,,_cal_adj,noleap,-6000,-6000,1,1000,301,"/Projects/Calendar/data/nc_files/Test_source/","/Projects/Calendar/data/nc_files/Test_adjusted/"
+PMIP3,msftmyz,Oclim,CCSM4,midHolocene,r1i1p1,,100001,130012,clim,_cal_adj,noleap,-6000,-6000,1,1000,1,"/Projects/Calendar/data/nc_files/Test_source/","/Projects/Calendar/data/nc_files/Test_adjusted/"
+PMIP3,ta,Amon,CCSM4,midHolocene,r1i1p1,,120001,130012,,_cal_adj,noleap,-6000,-6000,1,1200,100,"/Projects/Calendar/data/nc_files/Test_source/","/Projects/Calendar/data/nc_files/Test_adjusted/"
